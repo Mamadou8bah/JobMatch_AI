@@ -1,0 +1,225 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  JOB_SEEKER
+  EMPLOYER
+  ADMIN
+}
+
+enum JobStatus {
+  DRAFT
+  PENDING_REVIEW
+  PUBLISHED
+  CLOSED
+  REJECTED
+}
+
+enum ApplicationStatus {
+  PENDING
+  SHORTLISTED
+  REJECTED
+  INTERVIEW
+  HIRED
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  APPLICATION
+  JOB
+  CHAT
+  SYSTEM
+}
+
+enum TrainingCourseStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ChatThreadStatus {
+  OPEN
+  CLOSED
+}
+
+model User {
+  id                     String            @id @default(uuid())
+  email                  String            @unique
+  passwordHash           String
+  role                   UserRole
+  fullName               String
+  phone                  String?
+  location               String?
+  bio                    String?
+  skills                 String[]          @default([])
+  experienceYears        Int?
+  companyName            String?
+  companyDescription     String?
+  approved               Boolean           @default(false)
+  blocked                Boolean           @default(false)
+  emailVerified          Boolean           @default(false)
+  emailVerificationToken String?
+  passwordResetToken     String?
+  cvFileName             String?
+  cvFilePath             String?
+  cvMimeType             String?
+  cvText                 String?
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+  refreshTokens          RefreshToken[]
+  jobs                   Job[]             @relation("EmployerJobs")
+  applications           Application[]     @relation("ApplicantApplications")
+  receivedApplications   Application[]     @relation("EmployerApplications")
+  notifications          Notification[]
+  messagesSent           ChatMessage[]      @relation("MessagesSent")
+  chatThreadsAsEmployer  ChatThread[]       @relation("EmployerThreads")
+  chatThreadsAsApplicant  ChatThread[]       @relation("ApplicantThreads")
+  auditLogs              AuditLog[]        @relation("ActorAuditLogs")
+  messagesRead           ChatMessageRead[]
+}
+
+model RefreshToken {
+  id              String   @id @default(uuid())
+  userId          String
+  tokenHash       String   @unique
+  expiresAt       DateTime
+  revokedAt       DateTime?
+  replacedByToken String?
+  createdAt       DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Job {
+  id               String         @id @default(uuid())
+  employerId       String
+  title            String
+  description      String
+  location         String
+  employmentType   String
+  experienceLevel  String
+  requiredSkills   String[]       @default([])
+  salaryMin        Int?
+  salaryMax        Int?
+  status           JobStatus      @default(PENDING_REVIEW)
+  views            Int            @default(0)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  employer         User           @relation("EmployerJobs", fields: [employerId], references: [id], onDelete: Cascade)
+  applications     Application[]
+  chatThreads      ChatThread[]
+
+  @@index([employerId])
+  @@index([status])
+}
+
+model Application {
+  id           String            @id @default(uuid())
+  jobId        String
+  applicantId  String
+  employerId   String
+  coverLetter  String?
+  status       ApplicationStatus @default(PENDING)
+  matchScore   Int               @default(0)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  job          Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  applicant    User              @relation("ApplicantApplications", fields: [applicantId], references: [id], onDelete: Cascade)
+  employer     User              @relation("EmployerApplications", fields: [employerId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, applicantId])
+  @@index([employerId])
+  @@index([applicantId])
+}
+
+model Notification {
+  id         String           @id @default(uuid())
+  userId     String
+  title      String
+  message    String
+  type       NotificationType @default(INFO)
+  read       Boolean          @default(false)
+  createdAt  DateTime         @default(now())
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model TrainingCourse {
+  id          String               @id @default(uuid())
+  title       String
+  provider    String
+  description String?
+  url         String?
+  skills      String[]             @default([])
+  status      TrainingCourseStatus @default(ACTIVE)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+}
+
+model ChatThread {
+  id            String          @id @default(uuid())
+  employerId    String
+  applicantId   String
+  jobId         String?
+  status        ChatThreadStatus @default(OPEN)
+  lastMessageAt DateTime        @default(now())
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  employer      User            @relation("EmployerThreads", fields: [employerId], references: [id], onDelete: Cascade)
+  applicant     User            @relation("ApplicantThreads", fields: [applicantId], references: [id], onDelete: Cascade)
+  job           Job?            @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  messages      ChatMessage[]
+
+  @@unique([employerId, applicantId, jobId])
+  @@index([employerId])
+  @@index([applicantId])
+}
+
+model ChatMessage {
+  id         String           @id @default(uuid())
+  threadId   String
+  senderId   String
+  content    String
+  readAt     DateTime?
+  createdAt  DateTime         @default(now())
+  thread     ChatThread       @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  sender     User             @relation("MessagesSent", fields: [senderId], references: [id], onDelete: Cascade)
+  reads      ChatMessageRead[]
+
+  @@index([threadId])
+  @@index([senderId])
+}
+
+model ChatMessageRead {
+  id          String      @id @default(uuid())
+  messageId   String
+  userId      String
+  readAt      DateTime    @default(now())
+  message     ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String?
+  action     String
+  entityType String
+  entityId   String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  actor      User?    @relation("ActorAuditLogs", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([actorId])
+  @@index([entityType, entityId])
+}
