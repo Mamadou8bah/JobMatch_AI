@@ -1,0 +1,583 @@
+{
+  "Python": {
+    "course_title": "Python for Everybody",
+    "provider": "freeCodeCamp / University of Michigan",
+    "url": "https://www.freecodecamp.org/news/learn-python-free-python-courses-for-beginners/",
+    "duration": "20 hours",
+    "level": "Beginner"
+  },
+  "JavaScript": {
+    "course_title": "JavaScript Algorithms and Data Structures",
+    "provider": "freeCodeCamp",
+    "url": "https://www.freecodecamp.org/learn/javascript-algorithms-and-data-structures/",
+    "duration": "300 hours",
+    "level": "Beginner"
+  },
+  "TypeScript": {
+    "course_title": "TypeScript Course for Beginners",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=d56mGdeGDuY",
+    "duration": "1.5 hours",
+    "level": "Beginner"
+  },
+  "Java": {
+    "course_title": "Java Programming for Beginners",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=eIrMbAQSU34",
+    "duration": "2.5 hours",
+    "level": "Beginner"
+  },
+  "C#": {
+    "course_title": "C# Tutorial for Beginners",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=GhQdlMRllIM",
+    "duration": "4 hours",
+    "level": "Beginner"
+  },
+  "C++": {
+    "course_title": "C++ Programming Course",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=vLnPwxZdW4Y",
+    "duration": "31 hours",
+    "level": "Beginner"
+  },
+  "Go": {
+    "course_title": "Go Programming – Golang Tutorial",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=YS4e4q9oBaU",
+    "duration": "7 hours",
+    "level": "Beginner"
+  },
+  "Rust": {
+    "course_title": "Rust Programming Course for Beginners",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=BpPEoZW5IiY",
+    "duration": "13 hours",
+    "level": "Beginner"
+  },
+  "PHP": {
+    "course_title": "PHP Programming Language Tutorial",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=OK_JCtrrv-c",
+    "duration": "4.5 hours",
+    "level": "Beginner"
+  },
+  "Ruby": {
+    "course_title": "Ruby Programming Language",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=t_ispmWmdjY",
+    "duration": "4 hours",
+    "level": "Beginner"
+  },
+  "Django": {
+    "course_title": "Django Web Framework Tutorial",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=F5mRW0jo-U4",
+    "duration": "4 hours",
+    "level": "Intermediate"
+  },
+  "Flask": {
+    "course_title": "Flask Tutorial for Beginners",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=Z1RJmh_OqeA",
+    "duration": "6 hours",
+    "level": "Beginner"
+  },
+  "FastAPI": {
+    "course_title": "FastAPI Course for Beginners",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=tLKKmouUams",
+    "duration": "19 hours",
+    "level": "Intermediate"
+  },
+  "Node.js": {
+    "course_title": "Node.js and Express.js Full Course",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=Oe421EPjeBE",
+    "duration": "8 hours",
+    "level": "Beginner"
+  },
+  "React": {
+    "course_title": "React Course for Beginners",
+    "provider": "freeCodeCamp",
+    "url": "https://www.freecodecamp.org/learn/front-end-development-libraries/",
+    "duration": "300 hours",
+    "level": "Beginner"
+  },
+  "Vue.js": {
+    "course_title": "Vue.js 3 Course for Beginners",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=VeNfHj6MhgA",
+    "duration": "5 hours",
+    "level": "Beginner"
+  },
+  "Angular": {
+    "course_title": "Angular for Beginners Course",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=3dHNOWTI7H8",
+    "duration": "12 hours",
+    "level": "Beginner"
+  },
+  "HTML": {
+    "course_title": "HTML Full Course for Beginners",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=pQN-pnXPaVg",
+    "duration": "2 hours",
+    "level": "Beginner"
+  },
+  "CSS": {
+    "course_title": "CSS Full Course for Beginners",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=OXGznpKZ_sA",
+    "duration": "11 hours",
+    "level": "Beginner"
+  },
+  "Tailwind CSS": {
+    "course_title": "Tailwind CSS Full Course",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=pFAxDGpX9oE",
+    "duration": "3 hours",
+    "level": "Beginner"
+  },
+  "SQL": {
+    "course_title": "SQL Tutorial for Beginners",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=HXV3zeQKqGY",
+    "duration": "4 hours",
+    "level": "Beginner"
+  },
+  "PostgreSQL": {
+    "course_title": "PostgreSQL Tutorial for Beginners",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=qw--VYLPxG4",
+    "duration": "4 hours",
+    "level": "Beginner"
+  },
+  "MongoDB": {
+    "course_title": "MongoDB Crash Course",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=-56x56UppqQ",
+    "duration": "1 hour",
+    "level": "Beginner"
+  },
+  "Redis": {
+    "course_title": "Redis Crash Course",
+    "provider": "Traversy Media",
+    "url": "https://www.youtube.com/watch?v=jgpVdJB2sKQ",
+    "duration": "1 hour",
+    "level": "Beginner"
+  },
+  "Docker": {
+    "course_title": "Docker for Developers",
+    "provider": "freeCodeCamp",
+    "url": "https://www.freecodecamp.org/news/the-docker-handbook/",
+    "duration": "6 hours",
+    "level": "Beginner"
+  },
+  "Kubernetes": {
+    "course_title": "Kubernetes Course for Beginners",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=X48EiZkw7PM",
+    "duration": "4 hours",
+    "level": "Intermediate"
+  },
+  "Git": {
+    "course_title": "Git & GitHub Crash Course",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=RGOj5yH7evk",
+    "duration": "1 hour",
+    "level": "Beginner"
+  },
+  "REST APIs": {
+    "course_title": "REST API Concepts and Examples",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=7YcW25PHnAA",
+    "duration": "1 hour",
+    "level": "Beginner"
+  },
+  "GraphQL": {
+    "course_title": "GraphQL Full Course",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=ed8SzALpx1Q",
+    "duration": "4 hours",
+    "level": "Intermediate"
+  },
+  "Machine Learning": {
+    "course_title": "Machine Learning for Everybody",
+    "provider": "freeCodeCamp",
+    "url": "https://www.freecodecamp.org/news/machine-learning-for-everybody/",
+    "duration": "5 hours",
+    "level": "Beginner"
+  },
+  "Data Analysis": {
+    "course_title": "Data Analysis with Python",
+    "provider": "freeCodeCamp",
+    "url": "https://www.freecodecamp.org/learn/data-analysis-with-python/",
+    "duration": "300 hours",
+    "level": "Beginner"
+  },
+  "Data Science": {
+    "course_title": "Data Science for Beginners",
+    "provider": "Microsoft / freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=ua-CiDNNj30",
+    "duration": "1 hour",
+    "level": "Beginner"
+  },
+  "Pandas": {
+    "course_title": "Pandas Tutorial for Beginners",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=vmEHCJWGsEg",
+    "duration": "1 hour",
+    "level": "Beginner"
+  },
+  "NumPy": {
+    "course_title": "NumPy Tutorial for Beginners",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=QUT1VHiLmmI",
+    "duration": "1 hour",
+    "level": "Beginner"
+  },
+  "TensorFlow": {
+    "course_title": "TensorFlow 2.0 Complete Course",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=tPYj3fFJGjk",
+    "duration": "7 hours",
+    "level": "Intermediate"
+  },
+  "PyTorch": {
+    "course_title": "PyTorch for Deep Learning",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=GIsg-ZUy0MY",
+    "duration": "14 hours",
+    "level": "Intermediate"
+  },
+  "Cybersecurity": {
+    "course_title": "Introduction to Cybersecurity",
+    "provider": "Cisco Networking Academy",
+    "url": "https://www.netacad.com/courses/cybersecurity/introduction-cybersecurity",
+    "duration": "15 hours",
+    "level": "Beginner"
+  },
+  "Networking": {
+    "course_title": "Computer Networking Full Course",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=qiQR5rTSshw",
+    "duration": "9 hours",
+    "level": "Beginner"
+  },
+  "Linux": {
+    "course_title": "Linux Command Line Tutorial",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=ZtqBQ68S4B0",
+    "duration": "2 hours",
+    "level": "Beginner"
+  },
+  "AWS": {
+    "course_title": "AWS Certified Cloud Practitioner",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=SOTamWNgDKc",
+    "duration": "13 hours",
+    "level": "Beginner"
+  },
+  "Google Cloud": {
+    "course_title": "Google Cloud Digital Leader",
+    "provider": "Google Cloud Skills Boost",
+    "url": "https://www.cloudskillsboost.google/paths/9",
+    "duration": "10 hours",
+    "level": "Beginner"
+  },
+  "Azure": {
+    "course_title": "Azure Fundamentals",
+    "provider": "Microsoft Learn",
+    "url": "https://learn.microsoft.com/en-us/training/paths/azure-fundamentals/",
+    "duration": "8 hours",
+    "level": "Beginner"
+  },
+  "Excel": {
+    "course_title": "Excel for Beginners",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=Vl0H-qTclOg",
+    "duration": "2 hours",
+    "level": "Beginner"
+  },
+  "Power BI": {
+    "course_title": "Power BI Full Course",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=AGrlHI98s4Q",
+    "duration": "3 hours",
+    "level": "Beginner"
+  },
+  "Accounting": {
+    "course_title": "Introduction to Financial Accounting",
+    "provider": "Coursera (Wharton)",
+    "url": "https://www.coursera.org/learn/wharton-accounting",
+    "duration": "12 hours",
+    "level": "Beginner"
+  },
+  "Bookkeeping": {
+    "course_title": "Bookkeeping Basics",
+    "provider": "Coursera",
+    "url": "https://www.coursera.org/learn/bookkeeping-basics",
+    "duration": "6 hours",
+    "level": "Beginner"
+  },
+  "Financial Modeling": {
+    "course_title": "Financial Modeling for Beginners",
+    "provider": "Corporate Finance Institute",
+    "url": "https://corporatefinanceinstitute.com/resources/financial-modeling/free-financial-modeling-guide/",
+    "duration": "8 hours",
+    "level": "Intermediate"
+  },
+  "Digital Marketing": {
+    "course_title": "Fundamentals of Digital Marketing",
+    "provider": "Google Digital Garage",
+    "url": "https://learndigital.withgoogle.com/digitalgarage/course/digital-marketing",
+    "duration": "40 hours",
+    "level": "Beginner"
+  },
+  "SEO": {
+    "course_title": "SEO Training Course",
+    "provider": "HubSpot Academy",
+    "url": "https://academy.hubspot.com/courses/seo-training",
+    "duration": "3 hours",
+    "level": "Beginner"
+  },
+  "UI/UX Design": {
+    "course_title": "UI / UX Design Tutorial",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=c9Wg6Cb_YlU",
+    "duration": "4 hours",
+    "level": "Beginner"
+  },
+  "Figma": {
+    "course_title": "Figma UI Design Tutorial",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=FTFaQHTSZPE",
+    "duration": "2 hours",
+    "level": "Beginner"
+  },
+  "Project Management": {
+    "course_title": "Google Project Management Certificate (Foundations)",
+    "provider": "Coursera / Google",
+    "url": "https://www.coursera.org/professional-certificates/google-project-management",
+    "duration": "20 hours",
+    "level": "Beginner"
+  },
+  "Agile": {
+    "course_title": "Agile Development Specialization",
+    "provider": "Coursera",
+    "url": "https://www.coursera.org/specializations/agile-development",
+    "duration": "15 hours",
+    "level": "Beginner"
+  },
+  "Scrum": {
+    "course_title": "Scrum Fundamentals Certified",
+    "provider": "SCRUMstudy",
+    "url": "https://www.scrumstudy.com/certification/scrum-fundamentals-certified",
+    "duration": "5 hours",
+    "level": "Beginner"
+  },
+  "Communication": {
+    "course_title": "Improving Communication Skills",
+    "provider": "Coursera (Wharton)",
+    "url": "https://www.coursera.org/learn/wharton-communication-skills",
+    "duration": "8 hours",
+    "level": "Beginner"
+  },
+  "Leadership": {
+    "course_title": "Leadership Skills in the Digital Age",
+    "provider": "Coursera",
+    "url": "https://www.coursera.org/learn/leadership-skills",
+    "duration": "10 hours",
+    "level": "Beginner"
+  },
+  "Customer Service": {
+    "course_title": "Customer Service Fundamentals",
+    "provider": "HubSpot Academy",
+    "url": "https://academy.hubspot.com/courses/customer-service",
+    "duration": "2 hours",
+    "level": "Beginner"
+  },
+  "Sales": {
+    "course_title": "Sales Training for Beginners",
+    "provider": "HubSpot Academy",
+    "url": "https://academy.hubspot.com/courses/inbound-sales",
+    "duration": "3 hours",
+    "level": "Beginner"
+  },
+  "Public Speaking": {
+    "course_title": "Introduction to Public Speaking",
+    "provider": "Coursera",
+    "url": "https://www.coursera.org/learn/public-speaking",
+    "duration": "15 hours",
+    "level": "Beginner"
+  },
+  "Problem Solving": {
+    "course_title": "Creative Problem Solving",
+    "provider": "Coursera",
+    "url": "https://www.coursera.org/learn/creative-problem-solving",
+    "duration": "12 hours",
+    "level": "Beginner"
+  },
+  "Teamwork": {
+    "course_title": "Teamwork Skills: Communicating Effectively in Groups",
+    "provider": "Coursera",
+    "url": "https://www.coursera.org/learn/teamwork-skills-communicating-effectively-in-groups",
+    "duration": "8 hours",
+    "level": "Beginner"
+  },
+  "Mobile Development": {
+    "course_title": "Flutter Course for Beginners",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=VPvVD8t02U8",
+    "duration": "37 hours",
+    "level": "Beginner"
+  },
+  "Flutter": {
+    "course_title": "Flutter Crash Course",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=1gDhl4leEzA",
+    "duration": "1 hour",
+    "level": "Beginner"
+  },
+  "DevOps": {
+    "course_title": "DevOps Engineering Course for Beginners",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=j5Zsa_eaEJM",
+    "duration": "2 hours",
+    "level": "Beginner"
+  },
+  "CI/CD": {
+    "course_title": "CI/CD Pipeline Tutorial",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=R8_veQiRBPM",
+    "duration": "1 hour",
+    "level": "Intermediate"
+  },
+  "Testing": {
+    "course_title": "Software Testing Full Course",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=Eq04f3P8ZGk",
+    "duration": "4 hours",
+    "level": "Beginner"
+  },
+  "Selenium": {
+    "course_title": "Selenium WebDriver Tutorial",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=lAdEwdSfybo",
+    "duration": "3 hours",
+    "level": "Intermediate"
+  },
+  "Blockchain": {
+    "course_title": "Blockchain Full Course",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=gyMwXuJrbJQ",
+    "duration": "17 hours",
+    "level": "Beginner"
+  },
+  "Solidity": {
+    "course_title": "Solidity, Blockchain, and Smart Contract Course",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=umepbfKp5rI",
+    "duration": "16 hours",
+    "level": "Intermediate"
+  },
+  "Artificial Intelligence": {
+    "course_title": "Elements of AI",
+    "provider": "University of Helsinki",
+    "url": "https://www.elementsofai.com/",
+    "duration": "30 hours",
+    "level": "Beginner"
+  },
+  "NLP": {
+    "course_title": "Natural Language Processing with spaCy",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=dIUTsFT2NUQ",
+    "duration": "3 hours",
+    "level": "Intermediate"
+  },
+  "Computer Vision": {
+    "course_title": "OpenCV Python Course",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=oXlwYbGOaXk",
+    "duration": "4 hours",
+    "level": "Intermediate"
+  },
+  "R": {
+    "course_title": "R Programming Tutorial",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=_V8eKsto3Ug",
+    "duration": "2 hours",
+    "level": "Beginner"
+  },
+  "Statistics": {
+    "course_title": "Statistics for Data Science",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=xxpc-HPKN28",
+    "duration": "8 hours",
+    "level": "Beginner"
+  },
+  "Microsoft Office": {
+    "course_title": "Microsoft Office Essential Skills",
+    "provider": "GCFGlobal",
+    "url": "https://edu.gcfglobal.org/en/subjects/office/",
+    "duration": "10 hours",
+    "level": "Beginner"
+  },
+  "Content Writing": {
+    "course_title": "The Strategy of Content Marketing",
+    "provider": "Coursera",
+    "url": "https://www.coursera.org/learn/content-marketing",
+    "duration": "12 hours",
+    "level": "Beginner"
+  },
+  "Graphic Design": {
+    "course_title": "Graphic Design Basics",
+    "provider": "Canva Design School",
+    "url": "https://designschool.canva.com/",
+    "duration": "Self-paced",
+    "level": "Beginner"
+  },
+  "Video Editing": {
+    "course_title": "DaVinci Resolve Tutorial for Beginners",
+    "provider": "freeCodeCamp",
+    "url": "https://www.youtube.com/watch?v=63LnNcYMLwE",
+    "duration": "3 hours",
+    "level": "Beginner"
+  },
+  "Entrepreneurship": {
+    "course_title": "Entrepreneurship Specialization",
+    "provider": "Coursera (Wharton)",
+    "url": "https://www.coursera.org/specializations/wharton-entrepreneurship",
+    "duration": "20 hours",
+    "level": "Beginner"
+  },
+  "Supply Chain": {
+    "course_title": "Supply Chain Logistics",
+    "provider": "Coursera (Rutgers)",
+    "url": "https://www.coursera.org/learn/supply-chain-logistics",
+    "duration": "8 hours",
+    "level": "Beginner"
+  },
+  "Human Resources": {
+    "course_title": "Preparing to Manage Human Resources",
+    "provider": "Coursera",
+    "url": "https://www.coursera.org/learn/managing-human-resources",
+    "duration": "10 hours",
+    "level": "Beginner"
+  },
+  "Data Entry": {
+    "course_title": "Data Entry Skills Training",
+    "provider": "Alison",
+    "url": "https://alison.com/course/data-entry-skills",
+    "duration": "3 hours",
+    "level": "Beginner"
+  },
+  "Typing": {
+    "course_title": "Touch Typing Training",
+    "provider": "TypingClub",
+    "url": "https://www.typingclub.com/",
+    "duration": "Self-paced",
+    "level": "Beginner"
+  }
+}
