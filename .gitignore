@@ -1,0 +1,13 @@
+# Repo-level gitignore for JobMatch_AI
+Ai_Engine/.env
+# Python artifacts
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+
+# Node backend (optional)
+backend/node_modules/
+backend/dist/

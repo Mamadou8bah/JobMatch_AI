@@ -1,0 +1,12 @@
+google-generativeai
+sentence-transformers
+scikit-learn
+numpy
+pdfplumber
+PyMuPDF
+python-docx
+python-dotenv
+torch
+fastapi
+uvicorn[standard]
+python-multipart
