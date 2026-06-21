@@ -1,4 +1,15 @@
-import { Body, Controller, Get, Param, Patch, Post, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Req,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -20,13 +31,19 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Patch('me')
-  async updateMe(@Req() request: Request & { user: { sub: string } }, @Body() dto: UpdateProfileDto) {
+  async updateMe(
+    @Req() request: Request & { user: { sub: string } },
+    @Body() dto: UpdateProfileDto,
+  ) {
     return this.usersService.updateProfile(request.user.sub, dto);
   }
 
   @UseGuards(JwtAuthGuard)
   @Patch('me/skills')
-  async updateSkills(@Req() request: Request & { user: { sub: string } }, @Body() body: { skills: string[] }) {
+  async updateSkills(
+    @Req() request: Request & { user: { sub: string } },
+    @Body() body: { skills: string[] },
+  ) {
     return this.usersService.updateSkills(request.user.sub, body.skills);
   }
 
@@ -51,7 +68,10 @@ export class UsersController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.Admin)
   @Get(':id')
-  async getById(@Req() request: Request & { user: { role: UserRole } }, @Param('id') id: string) {
+  async getById(
+    @Req() request: Request & { user: { role: UserRole } },
+    @Param('id') id: string,
+  ) {
     this.usersService.assertAdmin(request.user.role);
     return this.usersService.getUserById(id);
   }
