@@ -1,16 +1,24 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { toDbNotificationType } from '../common/mappers';
 import { DatabaseService } from '../database/database.service';
+import { EmailService } from '../mail/email.service';
 
 @Injectable()
 export class NotificationsService {
-  constructor(private readonly store: DatabaseService) {}
+  constructor(
+    private readonly store: DatabaseService,
+    private readonly emailService: EmailService,
+  ) {}
 
   async createNotification(
     userId: string,
-    input: { title: string; message: string; type: 'info' | 'success' | 'warning' | 'application' | 'job' },
+    input: {
+      title: string;
+      message: string;
+      type: 'info' | 'success' | 'warning' | 'application' | 'job' | 'chat' | 'system';
+    },
   ) {
-    return this.store.notification.create({
+    const notification = await this.store.notification.create({
       data: {
         userId,
         title: input.title,
@@ -18,6 +26,25 @@ export class NotificationsService {
         type: toDbNotificationType(input.type),
       },
     });
+
+    const user = await this.store.user.findUnique({
+      where: { id: userId },
+      select: { email: true, fullName: true },
+    });
+
+    if (user && user.email) {
+      try {
+        await this.emailService.sendMail(
+          user.email,
+          input.title,
+          `Hello ${user.fullName},\n\n${input.message}\n\nBest regards,\nJobMatch AI Team`,
+        );
+      } catch (error) {
+        console.error(`Failed to send email notification to ${user.email}:`, error);
+      }
+    }
+
+    return notification;
   }
 
   async listForUser(userId: string) {

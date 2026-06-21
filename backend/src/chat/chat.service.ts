@@ -1,12 +1,16 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { UserRole } from '../common/enums/role.enum';
 import { DatabaseService } from '../database/database.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateChatThreadDto } from './dto/create-chat-thread.dto';
 import { SendMessageDto } from './dto/send-message.dto';
 
 @Injectable()
 export class ChatService {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(
+    private readonly database: DatabaseService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   async createThread(currentUserId: string, role: UserRole, dto: CreateChatThreadDto) {
     const participant = await this.database.user.findUnique({ where: { id: dto.participantId } });
@@ -74,7 +78,7 @@ export class ChatService {
   }
 
   async sendMessage(threadId: string, senderId: string, dto: SendMessageDto) {
-    await this.ensureThreadAccess(threadId, senderId);
+    const thread = await this.ensureThreadAccess(threadId, senderId);
 
     const message = await this.database.chatMessage.create({
       data: {
@@ -88,6 +92,14 @@ export class ChatService {
     await this.database.chatThread.update({
       where: { id: threadId },
       data: { lastMessageAt: new Date() },
+    });
+
+    const recipientId = thread.employerId === senderId ? thread.applicantId : thread.employerId;
+    const briefContent = message.content.length > 60 ? message.content.substring(0, 60) + '...' : message.content;
+    await this.notificationsService.createNotification(recipientId, {
+      title: 'New chat message',
+      message: `${message.sender.fullName}: ${briefContent}`,
+      type: 'chat',
     });
 
     return message;
