@@ -23,7 +23,9 @@ export class UsersService {
   ) {}
 
   async listUsers() {
-    const users = await this.store.user.findMany({ orderBy: { createdAt: 'desc' } });
+    const users = await this.store.user.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
     return users.map((user) => this.sanitizeUser(user));
   }
 
@@ -37,7 +39,9 @@ export class UsersService {
   }
 
   async updateProfile(currentUserId: string, dto: UpdateProfileDto) {
-    const user = await this.store.user.findUnique({ where: { id: currentUserId } });
+    const user = await this.store.user.findUnique({
+      where: { id: currentUserId },
+    });
     if (!user) {
       throw new NotFoundException('User not found');
     }
@@ -75,20 +79,26 @@ export class UsersService {
       mimeType: file.mimetype,
       contentBase64: file.buffer.toString('base64'),
     });
-    const uploadDirectory = process.env.CV_UPLOAD_DIR ?? join(process.cwd(), 'uploads', 'cvs');
+    const uploadDirectory =
+      process.env.CV_UPLOAD_DIR ?? join(process.cwd(), 'uploads', 'cvs');
     await mkdir(uploadDirectory, { recursive: true });
 
-    const extension = extname(file.originalname) || this.extensionFromMimeType(file.mimetype);
+    const extension =
+      extname(file.originalname) || this.extensionFromMimeType(file.mimetype);
     const storedFileName = `${currentUserId}-${randomUUID()}${extension}`;
     const storedPath = join(uploadDirectory, storedFileName);
     await writeFile(storedPath, file.buffer);
 
-    const existingUser = await this.store.user.findUnique({ where: { id: currentUserId } });
+    const existingUser = await this.store.user.findUnique({
+      where: { id: currentUserId },
+    });
     if (!existingUser) {
       throw new NotFoundException('User not found');
     }
 
-    const mergedSkills = Array.from(new Set([...(existingUser.skills ?? []), ...parsed.skills]));
+    const mergedSkills = Array.from(
+      new Set([...(existingUser.skills ?? []), ...parsed.skills]),
+    );
     const updatedUser = await this.store.user.update({
       where: { id: currentUserId },
       data: {
@@ -113,7 +123,12 @@ export class UsersService {
   }
 
   sanitizeUser(user: DbUser) {
-    const { passwordHash, emailVerificationToken, passwordResetToken, ...safeUser } = user;
+    const {
+      passwordHash,
+      emailVerificationToken,
+      passwordResetToken,
+      ...safeUser
+    } = user;
     return {
       ...safeUser,
       role: fromDbUserRole(user.role),
@@ -126,17 +141,23 @@ export class UsersService {
     }
 
     if (
-      file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+      file.mimetype ===
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
       file.originalname.toLowerCase().endsWith('.docx')
     ) {
       return;
     }
 
-    if (file.mimetype === 'text/plain' || file.originalname.toLowerCase().endsWith('.txt')) {
+    if (
+      file.mimetype === 'text/plain' ||
+      file.originalname.toLowerCase().endsWith('.txt')
+    ) {
       return;
     }
 
-    throw new UnsupportedMediaTypeException('CV must be a PDF, DOCX, or plain text file');
+    throw new UnsupportedMediaTypeException(
+      'CV must be a PDF, DOCX, or plain text file',
+    );
   }
 
   private extensionFromMimeType(mimeType: string) {

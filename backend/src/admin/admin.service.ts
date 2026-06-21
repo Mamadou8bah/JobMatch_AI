@@ -13,7 +13,13 @@ export class AdminService {
       data: { approved },
     });
 
-    await this.audit(actorId, approved ? 'user.approve' : 'user.unapprove', 'User', userId, { approved });
+    await this.audit(
+      actorId,
+      approved ? 'user.approve' : 'user.unapprove',
+      'User',
+      userId,
+      { approved },
+    );
     return user;
   }
 
@@ -23,7 +29,13 @@ export class AdminService {
       data: { blocked },
     });
 
-    await this.audit(actorId, blocked ? 'user.block' : 'user.unblock', 'User', userId, { blocked });
+    await this.audit(
+      actorId,
+      blocked ? 'user.block' : 'user.unblock',
+      'User',
+      userId,
+      { blocked },
+    );
     return user;
   }
 
@@ -63,7 +75,9 @@ export class AdminService {
       this.database.user.count(),
       this.database.user.count({ where: { role: 'JOB_SEEKER' } }),
       this.database.user.count({ where: { role: 'EMPLOYER' } }),
-      this.database.user.count({ where: { role: 'EMPLOYER', approved: false } }),
+      this.database.user.count({
+        where: { role: 'EMPLOYER', approved: false },
+      }),
       this.database.job.count(),
       this.database.job.count({ where: { status: 'PUBLISHED' } }),
       this.database.job.count({ where: { status: 'PENDING_REVIEW' } }),
@@ -80,25 +94,41 @@ export class AdminService {
 
     return {
       users: { total: totalUsers, jobSeekers, employers, pendingEmployers },
-      jobs: { total: totalJobs, published: publishedJobs, pendingReview: pendingJobs },
+      jobs: {
+        total: totalJobs,
+        published: publishedJobs,
+        pendingReview: pendingJobs,
+      },
       applications: { total: totalApplications, hired: hiredApplications },
       engagement: { openChatThreads: openThreads },
       training: { courses: trainingCourses },
       labourMarket: {
-        topRequiredSkills: this.countSkills(topSkills.flatMap((job) => job.requiredSkills)).slice(0, 10),
+        topRequiredSkills: this.countSkills(
+          topSkills.flatMap((job) => job.requiredSkills),
+        ).slice(0, 10),
       },
     };
   }
 
   listAuditLogs() {
     return this.database.auditLog.findMany({
-      include: { actor: { select: { id: true, fullName: true, email: true, role: true } } },
+      include: {
+        actor: {
+          select: { id: true, fullName: true, email: true, role: true },
+        },
+      },
       orderBy: { createdAt: 'desc' },
       take: 100,
     });
   }
 
-  private audit(actorId: string, action: string, entityType: string, entityId: string, metadata?: Record<string, unknown>) {
+  private audit(
+    actorId: string,
+    action: string,
+    entityType: string,
+    entityId: string,
+    metadata?: Record<string, unknown>,
+  ) {
     return this.database.auditLog.create({
       data: {
         actorId,

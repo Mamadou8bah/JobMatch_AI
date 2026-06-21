@@ -1,4 +1,9 @@
-import { PrismaClient, UserRole, JobStatus, TrainingCourseStatus } from '@prisma/client';
+import {
+  PrismaClient,
+  UserRole,
+  JobStatus,
+  TrainingCourseStatus,
+} from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -41,7 +46,9 @@ async function main() {
     skipDuplicates: true,
   });
 
-  const employer = await prisma.user.findUnique({ where: { email: 'employer@jobmatch.ai' } });
+  const employer = await prisma.user.findUnique({
+    where: { email: 'employer@jobmatch.ai' },
+  });
   if (employer) {
     await prisma.job.createMany({
       data: [
