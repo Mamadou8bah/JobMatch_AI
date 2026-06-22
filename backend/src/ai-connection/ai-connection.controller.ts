@@ -32,6 +32,18 @@ export class AiConnectionController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('coach/messages')
+  listCoachMessages(@Req() request: Request & { user: { sub: string } }) {
+    return this.aiConnectionService.listCoachMessages(request.user.sub);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('coach/clear')
+  clearCoachMessages(@Req() request: Request & { user: { sub: string } }) {
+    return this.aiConnectionService.clearCoachMessages(request.user.sub);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Post('chat')
   async chat(@Req() request: Request & { user: { sub: string } }, @Body() body: { message: string }) {
     return this.aiConnectionService.chat({ message: body.message, userId: request.user.sub });

@@ -157,13 +157,13 @@ export default function SeekerRecommendations() {
           {jobs.map((job) => {
             const applied = appliedJobIds.has(job.id);
             return (
-              <div key={job.id} className="dash-card">
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
-                  <div style={{ display: "flex", gap: 14, flex: 1 }}>
+              <div key={job.id} className="dash-card dash-job-card">
+                <div className="dash-job-card-inner">
+                  <div className="dash-job-card-main">
                     <div className="dash-company-logo">
                       {companyInitials(job.employer?.companyName || job.employer?.fullName)}
                     </div>
-                    <div>
+                    <div className="dash-job-card-content">
                       <button type="button" className="dash-link-btn" onClick={() => openDetail(job)}>
                         <h3 style={{ margin: "0 0 4px", fontSize: "1rem", fontWeight: 600 }}>
                           {job.title}
@@ -199,7 +199,7 @@ export default function SeekerRecommendations() {
                       )}
                     </div>
                   </div>
-                  <div style={{ textAlign: "right", flexShrink: 0 }}>
+                  <div className="dash-job-card-actions">
                     {job.match?.score != null ? (
                       <div style={{ marginBottom: 8 }}>
                         <div style={{ fontWeight: 700, fontSize: "1.5rem" }}>
@@ -212,7 +212,7 @@ export default function SeekerRecommendations() {
                     ) : (
                       <StatusBadge status="pending" />
                     )}
-                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <div className="dash-job-card-buttons">
                       <button type="button" className="dash-btn sm" onClick={() => openDetail(job)}>
                         View details
                       </button>
@@ -238,84 +238,90 @@ export default function SeekerRecommendations() {
 
       {detailJob && (
         <div className="dash-modal-backdrop" onClick={() => setDetailJob(null)}>
-          <div className="dash-modal" onClick={(e) => e.stopPropagation()}>
-            <h3>{detailJob.title}</h3>
-            <p style={{ color: "#71717a" }}>
-              {detailJob.employer?.companyName || detailJob.employer?.fullName} · {detailJob.location}
-            </p>
-            <p>{detailJob.description}</p>
-            {detailJob.match?.score != null && (
-              <p><strong>Match score:</strong> {Math.round(detailJob.match.score)}%</p>
-            )}
+          <div className="dash-modal dash-modal-scroll" onClick={(e) => e.stopPropagation()}>
+            <div className="dash-modal-header">
+              <h3>{detailJob.title}</h3>
+              <p className="dash-modal-subtitle">
+                {detailJob.employer?.companyName || detailJob.employer?.fullName} · {detailJob.location}
+              </p>
+            </div>
 
-            {detailLoading ? (
-              <div className="dash-loading" style={{ minHeight: 80, marginTop: 16 }}>
-                <div className="dash-spinner" />
-              </div>
-            ) : (
-              <>
-                {detailJob.match?.matchedSkills?.length > 0 && (
-                  <div style={{ marginTop: 16 }}>
-                    <div className="dash-form-label">Skills you have</div>
-                    <div className="dash-skills">
-                      {detailJob.match.matchedSkills.map((s) => (
-                        <span key={s} className="dash-skill-tag matched">{s}</span>
-                      ))}
+            <div className="dash-modal-body">
+              <p className="dash-modal-description">{detailJob.description}</p>
+              {detailJob.match?.score != null && (
+                <p><strong>Match score:</strong> {Math.round(detailJob.match.score)}%</p>
+              )}
+
+              {detailLoading ? (
+                <div className="dash-loading" style={{ minHeight: 80, marginTop: 16 }}>
+                  <div className="dash-spinner" />
+                </div>
+              ) : (
+                <>
+                  {detailJob.match?.matchedSkills?.length > 0 && (
+                    <div style={{ marginTop: 16 }}>
+                      <div className="dash-form-label">Skills you have</div>
+                      <div className="dash-skills">
+                        {detailJob.match.matchedSkills.map((s) => (
+                          <span key={s} className="dash-skill-tag matched">{s}</span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {detailJob.match?.missingSkills?.length > 0 ? (
-                  <div style={{ marginTop: 16 }}>
-                    <div className="dash-form-label">Skills to develop</div>
-                    <div className="dash-skills">
-                      {detailJob.match.missingSkills.map((s) => (
-                        <span key={s} className="dash-skill-tag missing">{s}</span>
-                      ))}
+                  {detailJob.match?.missingSkills?.length > 0 ? (
+                    <div style={{ marginTop: 16 }}>
+                      <div className="dash-form-label">Skills to develop</div>
+                      <div className="dash-skills">
+                        {detailJob.match.missingSkills.map((s) => (
+                          <span key={s} className="dash-skill-tag missing">{s}</span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ) : detailJob.match?.score != null ? (
-                  <div className="dash-alert success" style={{ marginTop: 16 }}>
-                    You match all required skills for this role.
-                  </div>
-                ) : null}
+                  ) : detailJob.match?.score != null ? (
+                    <div className="dash-alert success" style={{ marginTop: 16 }}>
+                      You match all required skills for this role.
+                    </div>
+                  ) : null}
 
-                {detailJob.recommendations?.length > 0 && (
-                  <div style={{ marginTop: 16 }}>
-                    <div className="dash-form-label">Recommended courses</div>
-                    <div className="dash-pending-list">
-                      {detailJob.recommendations.map((rec, index) => (
-                        <div key={`${rec.title}-${index}`} className="dash-pending-item">
-                          <div className="dash-pending-info">
-                            <div className="dash-pending-name">{rec.title}</div>
-                            <div className="dash-pending-date">
-                              {[rec.provider, rec.skill].filter(Boolean).join(" · ")}
+                  {detailJob.recommendations?.length > 0 && (
+                    <div style={{ marginTop: 16 }}>
+                      <div className="dash-form-label">Recommended courses</div>
+                      <div className="dash-pending-list">
+                        {detailJob.recommendations.map((rec, index) => (
+                          <div key={`${rec.title}-${index}`} className="dash-pending-item">
+                            <div className="dash-pending-info">
+                              <div className="dash-pending-name">{rec.title}</div>
+                              <div className="dash-pending-date">
+                                {[rec.provider, rec.skill].filter(Boolean).join(" · ")}
+                              </div>
+                              {rec.description && (
+                                <p style={{ fontSize: "0.8rem", margin: "4px 0 0", color: "#52525b" }}>
+                                  {rec.description}
+                                </p>
+                              )}
                             </div>
-                            {rec.description && (
-                              <p style={{ fontSize: "0.8rem", margin: "4px 0 0", color: "#52525b" }}>
-                                {rec.description}
-                              </p>
+                            {rec.url && (
+                              <a
+                                href={rec.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="dash-btn sm primary"
+                                style={{ textDecoration: "none" }}
+                              >
+                                View course
+                              </a>
                             )}
                           </div>
-                          {rec.url && (
-                            <a
-                              href={rec.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="dash-btn sm primary"
-                              style={{ textDecoration: "none" }}
-                            >
-                              View course
-                            </a>
-                          )}
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
-              </>
-            )}
-            <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+                  )}
+                </>
+              )}
+            </div>
+
+            <div className="dash-modal-footer">
               {!appliedJobIds.has(detailJob.id) && (
                 <button type="button" className="dash-btn primary" onClick={() => { setApplyJob(detailJob); setDetailJob(null); }}>
                   Apply now

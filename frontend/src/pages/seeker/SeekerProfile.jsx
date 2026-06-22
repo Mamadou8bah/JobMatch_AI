@@ -1,22 +1,53 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "../../services/api.js";
 import { useAuth } from "../../context/AuthContext.jsx";
 import ICONS, { Icon } from "../../components/dashboard/icons.jsx";
 
-export default function SeekerProfile() {
-  const { user, refreshUser } = useAuth();
-  const [form, setForm] = useState({
+function profileFormFromUser(user) {
+  return {
     fullName: user?.fullName || "",
     phone: user?.phone || "",
     location: user?.location || "",
     bio: user?.bio || "",
     skills: (user?.skills || []).join(", "),
-  });
+  };
+}
+
+export default function SeekerProfile() {
+  const { user, refreshUser, loading: authLoading } = useAuth();
+  const [form, setForm] = useState(() => profileFormFromUser(user));
+  const [profileLoading, setProfileLoading] = useState(true);
   const [cvFile, setCvFile] = useState(null);
   const [parsed, setParsed] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    if (authLoading) return;
+
+    let cancelled = false;
+
+    api.users
+      .me()
+      .then((profile) => {
+        if (!cancelled) {
+          setForm(profileFormFromUser(profile));
+        }
+      })
+      .catch(() => {
+        if (!cancelled && user) {
+          setForm(profileFormFromUser(user));
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setProfileLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, user?.id]);
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -37,8 +68,9 @@ export default function SeekerProfile() {
         .split(",")
         .map((s) => s.trim())
         .filter(Boolean);
-      if (skills.length) await api.users.updateSkills(skills);
-      await refreshUser();
+      await api.users.updateSkills(skills);
+      const updated = await refreshUser();
+      if (updated) setForm(profileFormFromUser(updated));
       setSuccess("Profile updated successfully");
       setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
@@ -79,67 +111,85 @@ export default function SeekerProfile() {
       {error && <div className="dash-alert error">{error}</div>}
       {success && <div className="dash-alert success">{success}</div>}
 
-      <div className="dash-grid-2">
-        <div className="dash-card">
-          <h3 className="dash-card-title">Personal Information</h3>
-          <form onSubmit={handleSave}>
-            <div className="dash-form-group">
-              <label className="dash-form-label">Full Name</label>
-              <input
-                className="dash-input"
-                name="fullName"
-                value={form.fullName}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="dash-form-row">
-              <div className="dash-form-group">
-                <label className="dash-form-label">Phone</label>
-                <input
-                  className="dash-input"
-                  name="phone"
-                  value={form.phone}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="dash-form-group">
-                <label className="dash-form-label">Location</label>
-                <input
-                  className="dash-input"
-                  name="location"
-                  value={form.location}
-                  onChange={handleChange}
-                  placeholder="Banjul, The Gambia"
-                />
-              </div>
-            </div>
-            <div className="dash-form-group">
-              <label className="dash-form-label">Bio</label>
-              <textarea
-                className="dash-textarea"
-                name="bio"
-                value={form.bio}
-                onChange={handleChange}
-                placeholder="Brief professional summary..."
-              />
-            </div>
-            <div className="dash-form-group">
-              <label className="dash-form-label">Skills (comma-separated)</label>
-              <input
-                className="dash-input"
-                name="skills"
-                value={form.skills}
-                onChange={handleChange}
-                placeholder="JavaScript, React, Project Management"
-              />
-            </div>
-            <button type="submit" className="dash-btn primary" disabled={loading}>
-              Save Profile
-            </button>
-          </form>
+      {authLoading || profileLoading ? (
+        <div className="dash-loading" style={{ minHeight: 320 }}>
+          <div className="dash-spinner" />
         </div>
+      ) : (
+        <div className="dash-profile-grid dash-grid-2">
+          <div className="dash-card dash-profile-card">
+            <h3 className="dash-card-title">Personal Information</h3>
+            <form onSubmit={handleSave} className="dash-profile-form">
+              <div className="dash-form-group">
+                <label className="dash-form-label">Full Name</label>
+                <input
+                  className="dash-input"
+                  name="fullName"
+                  value={form.fullName}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="dash-form-row dash-profile-form-row">
+                <div className="dash-form-group">
+                  <label className="dash-form-label">Phone</label>
+                  <input
+                    className="dash-input"
+                    name="phone"
+                    type="tel"
+                    value={form.phone}
+                    onChange={handleChange}
+                    placeholder="+220 123 4567"
+                  />
+                </div>
+                <div className="dash-form-group">
+                  <label className="dash-form-label">Address</label>
+                  <input
+                    className="dash-input"
+                    name="location"
+                    value={form.location}
+                    onChange={handleChange}
+                    placeholder="Banjul, The Gambia"
+                  />
+                </div>
+              </div>
+              <div className="dash-form-group">
+                <label className="dash-form-label">Bio</label>
+                <textarea
+                  className="dash-textarea"
+                  name="bio"
+                  value={form.bio}
+                  onChange={handleChange}
+                  placeholder="Brief professional summary..."
+                />
+              </div>
+              <div className="dash-form-group">
+                <label className="dash-form-label">Skills (comma-separated)</label>
+                <input
+                  className="dash-input"
+                  name="skills"
+                  value={form.skills}
+                  onChange={handleChange}
+                  placeholder="JavaScript, React, Project Management"
+                />
+                {form.skills.trim() && (
+                  <div className="dash-skills dash-profile-skill-preview">
+                    {form.skills
+                      .split(",")
+                      .map((s) => s.trim())
+                      .filter(Boolean)
+                      .map((s) => (
+                        <span key={s} className="dash-skill-tag">{s}</span>
+                      ))}
+                  </div>
+                )}
+              </div>
+              <button type="submit" className="dash-btn primary dash-profile-save" disabled={loading}>
+                Save Profile
+              </button>
+            </form>
+          </div>
 
-        <div className="dash-card">
+          <div className="dash-card dash-profile-card">
           <h3 className="dash-card-title">CV Upload</h3>
           {user?.cvFileName && (
             <div className="dash-alert info" style={{ marginBottom: 16 }}>
@@ -149,6 +199,7 @@ export default function SeekerProfile() {
           <div className="dash-form-group">
             <label className="dash-form-label">Upload CV (PDF, DOCX, TXT — max 5MB)</label>
             <input
+              className="dash-profile-file-input"
               type="file"
               accept=".pdf,.doc,.docx,.txt"
               onChange={(e) => setCvFile(e.target.files?.[0] || null)}
@@ -156,7 +207,7 @@ export default function SeekerProfile() {
           </div>
           <button
             type="button"
-            className="dash-btn primary"
+            className="dash-btn primary dash-profile-save"
             onClick={handleCvUpload}
             disabled={!cvFile || loading}
             style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
@@ -215,6 +266,7 @@ export default function SeekerProfile() {
           )}
         </div>
       </div>
+      )}
     </>
   );
 }

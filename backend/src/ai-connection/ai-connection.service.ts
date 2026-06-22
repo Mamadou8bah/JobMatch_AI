@@ -81,16 +81,77 @@ export class AiConnectionService {
 
   async chat(input: { message: string; userId?: string; conversationHistory?: Array<{ role: string; content: string }> }) {
     return this.withFeatureCheck('careerChatEnabled', async () => {
-      const userProfile = await this.buildUserProfile(input.userId);
-      return this.aiEngineClient.chat({
-        message: input.message,
-        user_profile: userProfile,
-        conversation_history: input.conversationHistory?.map((turn) => ({
-          role: turn.role,
-          content: turn.content,
-        })),
+      const userId = input.userId;
+      if (!userId) {
+        throw new ServiceUnavailableException('User context is required for career chat');
+      }
+
+      const trimmedMessage = input.message.trim();
+      const priorMessages = await this.store.coachMessage.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'asc' },
+        take: 40,
       });
+
+      const conversationHistory = priorMessages.map((entry) => ({
+        role: entry.role === 'USER' ? 'user' : 'assistant',
+        content: entry.content,
+      }));
+
+      const userProfile = await this.buildUserProfile(userId);
+
+      const aiResult = await this.aiEngineClient.chat({
+        message: trimmedMessage,
+        user_profile: userProfile,
+        conversation_history: conversationHistory,
+      });
+
+      const userRecord = await this.store.coachMessage.create({
+        data: {
+          userId,
+          role: 'USER',
+          content: trimmedMessage,
+        },
+      });
+
+      const assistantRecord = await this.store.coachMessage.create({
+        data: {
+          userId,
+          role: 'ASSISTANT',
+          content: aiResult.response || 'I could not generate a response.',
+        },
+      });
+
+      return {
+        ...aiResult,
+        userMessage: this.formatCoachMessage(userRecord),
+        assistantMessage: this.formatCoachMessage(assistantRecord),
+      };
     });
+  }
+
+  listCoachMessages(userId: string) {
+    return this.store.coachMessage
+      .findMany({
+        where: { userId },
+        orderBy: { createdAt: 'asc' },
+        take: 200,
+      })
+      .then((messages) => messages.map((message) => this.formatCoachMessage(message)));
+  }
+
+  async clearCoachMessages(userId: string) {
+    await this.store.coachMessage.deleteMany({ where: { userId } });
+    return { cleared: true };
+  }
+
+  private formatCoachMessage(message: { id: string; role: string; content: string; createdAt: Date }) {
+    return {
+      id: message.id,
+      role: message.role === 'USER' ? 'user' : 'assistant',
+      content: message.content,
+      createdAt: message.createdAt,
+    };
   }
 
   async learningRoadmap(input: { goal: string; currentSkills?: string[]; userId?: string }) {

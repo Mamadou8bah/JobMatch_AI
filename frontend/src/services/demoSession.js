@@ -457,6 +457,7 @@ function createDefaultStore(role) {
     notifications,
     chatThreads,
     chatMessages,
+    coachMessages: [],
     courses: SHARED_COURSES.map((course) => ({
       ...course,
       skills: [...course.skills],
