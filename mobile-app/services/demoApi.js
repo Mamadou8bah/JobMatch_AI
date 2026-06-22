@@ -176,6 +176,10 @@ async function handleDemoRequest(path, options = {}) {
       },
     };
     store.chatMessages[threadId] = [...(store.chatMessages[threadId] || []), message];
+    const thread = (store.chatThreads || []).find((item) => item.id === threadId);
+    if (thread) {
+      thread.updatedAt = message.createdAt;
+    }
     await saveDemoStore(store);
     return message;
   }
@@ -223,10 +227,37 @@ async function handleDemoRequest(path, options = {}) {
     return { recommendations };
   }
 
+  if (path === "/ai/coach/messages" && method === "GET") {
+    return store.coachMessages || [];
+  }
+
+  if (path === "/ai/coach/clear" && method === "POST") {
+    store.coachMessages = [];
+    await saveDemoStore(store);
+    return { cleared: true };
+  }
+
   if (path === "/ai/chat" && method === "POST") {
+    const assistantContent =
+      "Based on your profile, focus on React and TypeScript roles in Banjul. Upload your CV and apply to Frontend Developer openings for the best match scores.";
+    const userMessage = {
+      id: `coach-user-${Date.now()}`,
+      role: "user",
+      content: body.message,
+      createdAt: new Date().toISOString(),
+    };
+    const assistantMessage = {
+      id: `coach-ai-${Date.now() + 1}`,
+      role: "assistant",
+      content: assistantContent,
+      createdAt: new Date().toISOString(),
+    };
+    store.coachMessages = [...(store.coachMessages || []), userMessage, assistantMessage];
+    await saveDemoStore(store);
     return {
-      response:
-        "Based on your profile, focus on React and TypeScript roles in Banjul. Upload your CV and apply to Frontend Developer openings for the best match scores.",
+      response: assistantContent,
+      userMessage,
+      assistantMessage,
     };
   }
 

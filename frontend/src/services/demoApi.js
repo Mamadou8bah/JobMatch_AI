@@ -75,6 +75,10 @@ function handleDemoRequest(path, options = {}) {
     return getDemoUser();
   }
 
+  if (path === "/users/me" && method === "GET") {
+    return getDemoUser();
+  }
+
   if (path === "/applications/me" && method === "GET") {
     return store.applications;
   }
@@ -169,6 +173,10 @@ function handleDemoRequest(path, options = {}) {
       },
     };
     store.chatMessages[threadId] = [...(store.chatMessages[threadId] || []), message];
+    const thread = (store.chatThreads || []).find((item) => item.id === threadId);
+    if (thread) {
+      thread.updatedAt = message.createdAt;
+    }
     saveDemoStore(store);
     return message;
   }
@@ -466,10 +474,37 @@ function handleDemoRequest(path, options = {}) {
     };
   }
 
+  if (path === "/ai/coach/messages" && method === "GET") {
+    return store.coachMessages || [];
+  }
+
+  if (path === "/ai/coach/clear" && method === "POST") {
+    store.coachMessages = [];
+    saveDemoStore(store);
+    return { cleared: true };
+  }
+
   if (path === "/ai/chat" && method === "POST") {
+    const assistantContent =
+      "Based on your profile, focus on React and TypeScript roles in Banjul. Upload your CV and apply to Frontend Developer openings for the best match scores.";
+    const userMessage = {
+      id: `coach-user-${Date.now()}`,
+      role: "user",
+      content: body.message,
+      createdAt: new Date().toISOString(),
+    };
+    const assistantMessage = {
+      id: `coach-ai-${Date.now() + 1}`,
+      role: "assistant",
+      content: assistantContent,
+      createdAt: new Date().toISOString(),
+    };
+    store.coachMessages = [...(store.coachMessages || []), userMessage, assistantMessage];
+    saveDemoStore(store);
     return {
-      response:
-        "Based on your profile, focus on React and TypeScript roles in Banjul. Upload your CV and apply to Frontend Developer openings for the best match scores.",
+      response: assistantContent,
+      userMessage,
+      assistantMessage,
     };
   }
 

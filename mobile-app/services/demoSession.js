@@ -256,6 +256,7 @@ function createDefaultStore() {
     notifications,
     chatThreads,
     chatMessages,
+    coachMessages: [],
     courses: TRAINING_COURSES.map((course) => ({
       ...course,
       skills: [...course.skills],

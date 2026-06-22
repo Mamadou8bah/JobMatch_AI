@@ -56,6 +56,23 @@ export default function Messages() {
       const message = await api.chat.sendMessage(selectedId, draft.trim());
       setMessages((prev) => [...prev, message]);
       setDraft("");
+      setThreads((prev) =>
+        prev
+          .map((thread) =>
+            thread.id === selectedId
+              ? {
+                  ...thread,
+                  lastMessageAt: message.createdAt || new Date().toISOString(),
+                  updatedAt: message.createdAt || new Date().toISOString(),
+                }
+              : thread
+          )
+          .sort(
+            (a, b) =>
+              new Date(b.lastMessageAt || b.updatedAt).getTime() -
+              new Date(a.lastMessageAt || a.updatedAt).getTime()
+          )
+      );
     } catch (err) {
       setError(err.message);
     } finally {

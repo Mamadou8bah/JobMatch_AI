@@ -208,6 +208,8 @@ export const api = {
       api.post("/ai/skills-gap", { candidateSkills, requiredSkills }),
     trainingRecommendations: (missingSkills) =>
       api.post("/ai/training-recommendations", { missingSkills }),
+    coachMessages: () => api.get("/ai/coach/messages"),
+    clearCoachMessages: () => api.post("/ai/coach/clear", {}),
     chat: (message) => api.post("/ai/chat", { message }),
     learningRoadmap: (goal, currentSkills) =>
       api.post("/ai/learning-roadmap", { goal, currentSkills }),

@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   FlatList,
   KeyboardAvoidingView,
@@ -16,30 +16,66 @@ import GlassBackground from "../components/GlassBackground";
 import { api } from "../services/api.js";
 import { colors, radius, spacing } from "../constants/theme";
 
+const WELCOME_MESSAGE = {
+  id: "welcome",
+  role: "assistant",
+  content: "Hi! Ask me about careers, interviews, CV tips, and job search strategy in The Gambia.",
+};
+
 export default function CoachScreen() {
   const insets = useSafeAreaInsets();
-  const [messages, setMessages] = useState([
-    {
-      id: "welcome",
-      role: "assistant",
-      content: "Hi! Ask me about careers, interviews, CV tips, and job search strategy in The Gambia.",
-    },
-  ]);
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(true);
+
+  useEffect(() => {
+    api.ai
+      .coachMessages()
+      .then((history) => {
+        setMessages(history.length ? history : [WELCOME_MESSAGE]);
+      })
+      .catch(() => {
+        setMessages([WELCOME_MESSAGE]);
+      })
+      .finally(() => setHistoryLoading(false));
+  }, []);
 
   const send = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || loading) return;
     const question = input.trim();
     setInput("");
-    setMessages((prev) => [...prev, { id: Date.now().toString(), role: "user", content: question }]);
+    const optimisticUser = {
+      id: `temp-user-${Date.now()}`,
+      role: "user",
+      content: question,
+    };
+    setMessages((prev) => [...prev.filter((m) => m.id !== "welcome"), optimisticUser]);
     setLoading(true);
     try {
       const data = await api.ai.chat(question);
-      setMessages((prev) => [
-        ...prev,
-        { id: `${Date.now()}-a`, role: "assistant", content: data.response },
-      ]);
+      setMessages((prev) => {
+        const withoutOptimistic = prev.filter((m) => m.id !== optimisticUser.id);
+        const next = [...withoutOptimistic];
+        if (data.userMessage) next.push(data.userMessage);
+        if (data.assistantMessage) next.push(data.assistantMessage);
+        else if (data.response) {
+          next.push({ id: `temp-ai-${Date.now()}`, role: "assistant", content: data.response });
+        }
+        return next.length ? next : [WELCOME_MESSAGE];
+      });
+    } catch {
+      setMessages((prev) => prev.filter((m) => m.id !== optimisticUser.id));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const clearHistory = async () => {
+    setLoading(true);
+    try {
+      await api.ai.clearCoachMessages();
+      setMessages([WELCOME_MESSAGE]);
     } finally {
       setLoading(false);
     }
@@ -53,25 +89,36 @@ export default function CoachScreen() {
       >
         <View style={styles.header}>
           <Text style={styles.title}>AI Career Coach</Text>
-          <Pressable onPress={() => router.back()}>
-            <Ionicons name="close" size={24} color={colors.ink} />
-          </Pressable>
+          <View style={styles.headerActions}>
+            {messages.some((m) => m.id !== "welcome") && (
+              <Pressable onPress={clearHistory} disabled={loading}>
+                <Text style={styles.clearText}>Clear</Text>
+              </Pressable>
+            )}
+            <Pressable onPress={() => router.back()}>
+              <Ionicons name="close" size={24} color={colors.ink} />
+            </Pressable>
+          </View>
         </View>
 
-        <FlatList
-          data={messages}
-          keyExtractor={(item) => item.id}
-          style={styles.list}
-          contentContainerStyle={{ padding: spacing.lg, gap: 10 }}
-          renderItem={({ item }) => (
-            <View style={[styles.bubble, item.role === "user" && styles.bubbleUser]}>
-              <Text style={[styles.bubbleText, item.role === "user" && styles.bubbleTextUser]}>
-                {item.content}
-              </Text>
-            </View>
-          )}
-          ListFooterComponent={loading ? <Text style={styles.thinking}>Thinking...</Text> : null}
-        />
+        {historyLoading ? (
+          <Text style={styles.thinking}>Loading chat...</Text>
+        ) : (
+          <FlatList
+            data={messages}
+            keyExtractor={(item) => item.id}
+            style={styles.list}
+            contentContainerStyle={{ padding: spacing.lg, gap: 10 }}
+            renderItem={({ item }) => (
+              <View style={[styles.bubble, item.role === "user" && styles.bubbleUser]}>
+                <Text style={[styles.bubbleText, item.role === "user" && styles.bubbleTextUser]}>
+                  {item.content}
+                </Text>
+              </View>
+            )}
+            ListFooterComponent={loading ? <Text style={styles.thinking}>Thinking...</Text> : null}
+          />
+        )}
 
         <View style={styles.compose}>
           <TextInput
@@ -80,8 +127,9 @@ export default function CoachScreen() {
             onChangeText={setInput}
             placeholder="Ask your career question..."
             placeholderTextColor={colors.muted}
+            editable={!loading && !historyLoading}
           />
-          <Pressable style={styles.sendBtn} onPress={send}>
+          <Pressable style={styles.sendBtn} onPress={send} disabled={loading || historyLoading}>
             <Text style={styles.sendText}>Ask</Text>
           </Pressable>
         </View>
@@ -98,6 +146,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     marginBottom: spacing.sm,
   },
+  headerActions: { flexDirection: "row", alignItems: "center", gap: 16 },
+  clearText: { color: colors.primary, fontWeight: "600" },
   title: { fontSize: 22, fontWeight: "800", color: colors.ink },
   list: { flex: 1 },
   bubble: {
