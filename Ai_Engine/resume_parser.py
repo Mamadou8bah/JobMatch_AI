@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-import io
-import json
 import os
+import re
 import tempfile
 from pathlib import Path
 from typing import Any, BinaryIO, Union
@@ -13,6 +12,7 @@ import pdfplumber
 from docx import Document
 
 from .utils import (
+    SKILL_SYNONYMS,
     clean_text,
     error_response,
     get_gemini_model,
@@ -135,6 +135,55 @@ def extract_cv_text(file_input: FileInput, filename: str | None = None) -> tuple
             os.unlink(temp_path)
 
 
+def _extract_skills_from_text(text: str) -> list[str]:
+    normalized = text.lower()
+    if not normalized.strip():
+        return []
+
+    found: list[str] = []
+    for canonical in sorted(set(SKILL_SYNONYMS.values()), key=len, reverse=True):
+        if canonical in normalized:
+            found.append(canonical)
+
+    return list(dict.fromkeys(found))
+
+
+def _heuristic_parse_cv_text(cv_text: str) -> dict[str, Any]:
+    email_match = re.search(r"[\w.+-]+@[\w-]+\.[\w.-]+", cv_text)
+    phone_match = re.search(r"\+?[\d\s().-]{10,}", cv_text)
+
+    name = None
+    for line in cv_text.splitlines()[:5]:
+        candidate = line.strip()
+        if not candidate or "@" in candidate:
+            continue
+        if re.search(r"\d{3,}", candidate):
+            continue
+        word_count = len(candidate.split())
+        if 2 <= word_count <= 5:
+            name = candidate
+            break
+
+    return {
+        "name": name,
+        "email": email_match.group(0) if email_match else None,
+        "phone": phone_match.group(0).strip() if phone_match else None,
+        "education": [],
+        "experience": [],
+        "skills": _extract_skills_from_text(cv_text),
+        "parsedWithAi": False,
+    }
+
+
+def _structure_cv_text(cv_text: str) -> dict[str, Any]:
+    try:
+        structured = _structure_cv_with_gemini(cv_text)
+        structured["parsedWithAi"] = True
+        return structured
+    except Exception:
+        return _heuristic_parse_cv_text(cv_text)
+
+
 def _structure_cv_with_gemini(cv_text: str) -> dict[str, Any]:
     prompt = f"""
 Extract structured information from the following CV text and return ONLY a valid JSON object with no markdown, no code blocks, no extra text.
@@ -221,14 +270,9 @@ def parse_resume(file_input: FileInput, filename: str | None = None) -> dict[str
         if extraction_error:
             return error_response(extraction_error)
 
-        structured = _structure_cv_with_gemini(cv_text)
+        structured = _structure_cv_text(cv_text)
         structured["rawText"] = cv_text
         return structured
-
-    except json.JSONDecodeError:
-        return error_response("Could not parse CV: AI returned invalid JSON.")
-    except ValueError as exc:
-        return error_response(str(exc))
     except Exception as exc:
         return error_response(f"Could not parse CV: {exc}")
 
@@ -240,14 +284,9 @@ def parse_resume_text(text: str) -> dict[str, Any]:
         if not cleaned:
             return error_response("Could not parse CV: no text provided.")
 
-        structured = _structure_cv_with_gemini(cleaned)
+        structured = _structure_cv_text(cleaned)
         structured["rawText"] = cleaned
         return structured
-
-    except json.JSONDecodeError:
-        return error_response("Could not parse CV: AI returned invalid JSON.")
-    except ValueError as exc:
-        return error_response(str(exc))
     except Exception as exc:
         return error_response(f"Could not parse CV: {exc}")
 
@@ -264,4 +303,5 @@ def to_backend_resume_format(parsed: dict[str, Any]) -> dict[str, Any]:
         "education": _format_education_strings(parsed.get("education") or []),
         "experience": _format_experience_strings(parsed.get("experience") or []),
         "rawText": parsed.get("rawText"),
+        "parsedWithAi": parsed.get("parsedWithAi", True),
     }

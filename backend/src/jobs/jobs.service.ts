@@ -15,7 +15,7 @@ export class JobsService {
     private readonly aiEngineClient: AiEngineClient,
   ) {}
 
-  async listJobs(currentUserId?: string, query?: JobQueryDto) {
+  async listJobs(currentUserId?: string, currentUserRole?: UserRole, query?: JobQueryDto) {
     const currentUser = currentUserId ? await this.store.user.findUnique({ where: { id: currentUserId } }) : undefined;
     const jobs = await this.store.job.findMany({
       orderBy: { createdAt: 'desc' },
@@ -27,7 +27,18 @@ export class JobsService {
     const normalizedStatus = query?.status?.toLowerCase();
 
     const filteredJobs = jobs
-      .filter((job) => !normalizedStatus || job.status.toLowerCase() === normalizedStatus)
+      .filter((job) => {
+        if (normalizedStatus) {
+          return job.status.toLowerCase() === normalizedStatus;
+        }
+        if (currentUserRole === UserRole.Admin) {
+          return true;
+        }
+        if (currentUserRole === UserRole.Employer && currentUserId) {
+          return job.status === 'PUBLISHED' || job.employerId === currentUserId;
+        }
+        return job.status === 'PUBLISHED';
+      })
       .filter((job) => !normalizedLocation || job.location.toLowerCase().includes(normalizedLocation))
       .filter((job) => {
         if (!normalizedSearch) return true;
@@ -57,6 +68,14 @@ export class JobsService {
   async createJob(employerId: string, role: UserRole, dto: CreateJobDto) {
     this.ensureEmployerRole(role);
 
+    const employer = await this.store.user.findUnique({ where: { id: employerId } });
+    if (!employer) {
+      throw new NotFoundException('Employer not found');
+    }
+    if (role === UserRole.Employer && !employer.approved) {
+      throw new ForbiddenException('Your employer account must be approved before posting jobs');
+    }
+
     const job = await this.store.job.create({
       data: {
         employerId,
@@ -76,7 +95,7 @@ export class JobsService {
     return this.serializeJob(job);
   }
 
-  async getJobById(jobId: string) {
+  async getJobById(jobId: string, currentUserId?: string) {
     const job = await this.store.job.findUnique({
       where: { id: jobId },
       include: { employer: true },
@@ -86,7 +105,20 @@ export class JobsService {
       throw new NotFoundException('Job not found');
     }
 
-    return this.serializeJob(job);
+    const currentUser = currentUserId
+      ? await this.store.user.findUnique({ where: { id: currentUserId } })
+      : undefined;
+
+    return this.serializeJob(
+      job,
+      currentUser?.role === 'JOB_SEEKER'
+        ? {
+            id: currentUser.id,
+            skills: currentUser.skills,
+            cvText: currentUser.cvText,
+          }
+        : undefined,
+    );
   }
 
   async updateJob(jobId: string, employerId: string, role: UserRole, dto: UpdateJobDto) {

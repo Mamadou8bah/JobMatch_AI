@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { JobStatus } from '@prisma/client';
 import { DatabaseService } from '../database/database.service';
+import { UpdateAiConfigDto } from './dto/update-ai-config.dto';
 import { ModerateJobDto } from './dto/moderate-job.dto';
 
 @Injectable()
@@ -95,6 +96,87 @@ export class AdminService {
       include: { actor: { select: { id: true, fullName: true, email: true, role: true } } },
       orderBy: { createdAt: 'desc' },
       take: 100,
+    });
+  }
+
+  async getAiConfig() {
+    const settings = await this.ensurePlatformSettings();
+    return this.formatAiConfig(settings);
+  }
+
+  async updateAiConfig(actorId: string, dto: UpdateAiConfigDto) {
+    await this.ensurePlatformSettings();
+    const updated = await this.database.platformSetting.update({
+      where: { id: 'global' },
+      data: {
+        aiEngineUrl: dto.aiEngineUrl,
+        aiMatchThreshold: dto.aiMatchThreshold,
+        aiEnabled: dto.aiEnabled,
+        careerChatEnabled: dto.careerChatEnabled,
+        resumeParsingEnabled: dto.resumeParsingEnabled,
+      },
+    });
+
+    await this.audit(actorId, 'ai.config.update', 'PlatformSetting', 'global', dto as Record<string, unknown>);
+    return this.formatAiConfig(updated);
+  }
+
+  async getAiHealth() {
+    const config = await this.getAiConfig();
+    const started = Date.now();
+    try {
+      const response = await fetch(`${config.aiEngineUrl}/health`, {
+        method: 'GET',
+        signal: AbortSignal.timeout(5000),
+      });
+      const payload = response.ok
+        ? ((await response.json()) as { geminiModel?: string; geminiConfigured?: boolean })
+        : null;
+      return {
+        status: response.ok ? 'online' : 'degraded',
+        latencyMs: Date.now() - started,
+        httpStatus: response.status,
+        aiEngineUrl: config.aiEngineUrl,
+        geminiModel: payload?.geminiModel ?? null,
+        geminiConfigured: payload?.geminiConfigured ?? null,
+        checkedAt: new Date().toISOString(),
+      };
+    } catch {
+      return {
+        status: 'offline',
+        latencyMs: Date.now() - started,
+        aiEngineUrl: config.aiEngineUrl,
+        checkedAt: new Date().toISOString(),
+      };
+    }
+  }
+
+  private formatAiConfig(updated: {
+    aiEngineUrl: string | null;
+    aiMatchThreshold: number;
+    aiEnabled: boolean;
+    careerChatEnabled: boolean;
+    resumeParsingEnabled: boolean;
+    updatedAt: Date;
+  }) {
+    return {
+      aiEngineUrl: updated.aiEngineUrl ?? process.env.AI_ENGINE_URL ?? 'http://localhost:8000',
+      aiMatchThreshold: updated.aiMatchThreshold,
+      aiEnabled: updated.aiEnabled,
+      careerChatEnabled: updated.careerChatEnabled,
+      resumeParsingEnabled: updated.resumeParsingEnabled,
+      updatedAt: updated.updatedAt,
+    };
+  }
+
+  private async ensurePlatformSettings() {
+    return this.database.platformSetting.upsert({
+      where: { id: 'global' },
+      update: {},
+      create: {
+        id: 'global',
+        aiEngineUrl: process.env.AI_ENGINE_URL ?? 'http://localhost:8000',
+      },
     });
   }
 

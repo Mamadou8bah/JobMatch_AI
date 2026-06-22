@@ -11,6 +11,8 @@ def _build_system_instruction(user_profile: dict[str, Any]) -> str:
     skills = user_profile.get("skills") or []
     education = user_profile.get("education") or "Not provided"
     experience = user_profile.get("experience") or "Not provided"
+    location = user_profile.get("location") or "The Gambia"
+    name = user_profile.get("fullName") or "the user"
 
     if isinstance(skills, list):
         skills_text = ", ".join(str(skill) for skill in skills) or "Not provided"
@@ -24,15 +26,17 @@ def _build_system_instruction(user_profile: dict[str, Any]) -> str:
         experience = "; ".join(str(item) for item in experience)
 
     return f"""
-You are a career guidance counselor helping job seekers in The Gambia find work and improve their skills.
-You are encouraging, practical, and knowledgeable about both local and international job markets.
-When giving advice, be specific and actionable. Keep your responses clear, friendly, and to the point (3-5 sentences max).
+You are a warm, knowledgeable career coach helping job seekers in {location}, especially The Gambia.
+Have a natural back-and-forth conversation. Answer the user's actual question, remember prior turns,
+and give specific, actionable advice about jobs, CVs, interviews, skills, and career growth.
 
-The user's current profile:
+User profile:
+- Name: {name}
 - Skills: {skills_text}
 - Education: {education}
 - Experience: {experience}
-Always reference this profile when relevant.
+
+When relevant, tie advice to their profile and local job market. Be concise but conversational.
 """
 
 
@@ -42,11 +46,26 @@ def _normalize_history(conversation_history: list[dict[str, Any]] | None) -> lis
 
     normalized: list[dict[str, Any]] = []
     for turn in conversation_history:
-        role = turn.get("role", "user")
-        parts = turn.get("parts") or []
-        if isinstance(parts, str):
-            parts = [parts]
-        normalized.append({"role": role, "parts": parts})
+        role = str(turn.get("role") or "user").lower()
+        if role in {"assistant", "model"}:
+            role = "model"
+        elif role != "user":
+            continue
+
+        content = turn.get("content")
+        parts = turn.get("parts")
+        if isinstance(content, str) and content.strip():
+            text_parts = [content.strip()]
+        elif isinstance(parts, str) and parts.strip():
+            text_parts = [parts.strip()]
+        elif isinstance(parts, list):
+            text_parts = [str(part).strip() for part in parts if str(part).strip()]
+        else:
+            continue
+
+        if text_parts:
+            normalized.append({"role": role, "parts": text_parts})
+
     return normalized
 
 
@@ -79,10 +98,14 @@ def get_chatbot_reply(
         response = chat.send_message(user_message.strip())
         reply_text = (response.text or "").strip()
 
+        if not reply_text:
+            return error_response("Gemini returned an empty response.")
+
         return {
             "reply": reply_text,
             "response": reply_text,
             "message": reply_text,
+            "parsedWithAi": True,
         }
 
     except ValueError as exc:
@@ -122,7 +145,7 @@ Return ONLY valid JSON with no markdown:
         from .utils import parse_json_from_gemini_response
 
         roadmap = parse_json_from_gemini_response(response.text)
-        return {"roadmap": roadmap, "response": roadmap.get("summary", "")}
+        return {"roadmap": roadmap, "response": roadmap.get("summary", ""), "parsedWithAi": True}
 
     except ValueError as exc:
         return error_response(str(exc))

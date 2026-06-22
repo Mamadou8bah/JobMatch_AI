@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "JobMatch AI",
+    "slug": "jobmatch-ai",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "jobmatch",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#6BA3D8"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.jobmatch.ai"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#6BA3D8"
+      },
+      "package": "com.jobmatch.ai"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-asset",
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "apiUrl": "https://jobmatchgambia.onrender.com/api"
+    }
+  }
+}

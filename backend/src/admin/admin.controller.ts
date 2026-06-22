@@ -5,6 +5,7 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '../common/enums/role.enum';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { AdminService } from './admin.service';
+import { UpdateAiConfigDto } from './dto/update-ai-config.dto';
 import { ModerateJobDto } from './dto/moderate-job.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -50,5 +51,23 @@ export class AdminController {
   @Get('audit-logs')
   auditLogs() {
     return this.adminService.listAuditLogs();
+  }
+
+  @Get('ai-config')
+  aiConfig() {
+    return this.adminService.getAiConfig();
+  }
+
+  @Patch('ai-config')
+  updateAiConfig(
+    @Req() request: Request & { user: { sub: string } },
+    @Body() dto: UpdateAiConfigDto,
+  ) {
+    return this.adminService.updateAiConfig(request.user.sub, dto);
+  }
+
+  @Get('ai-config/health')
+  aiHealth() {
+    return this.adminService.getAiHealth();
   }
 }

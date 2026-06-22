@@ -2,7 +2,6 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
-  OnModuleInit,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -20,16 +19,12 @@ import { RegisterDto } from './dto/register.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable()
-export class AuthService implements OnModuleInit {
+export class AuthService {
   constructor(
     private readonly store: DatabaseService,
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
   ) {}
-
-  async onModuleInit() {
-    await this.store.seedAdminIfNeeded();
-  }
 
   async register(dto: RegisterDto) {
     const email = dto.email.toLowerCase();
@@ -39,7 +34,6 @@ export class AuthService implements OnModuleInit {
       throw new ConflictException('Email already registered');
     }
 
-    const verificationToken = randomUUID();
     const passwordHash = await bcrypt.hash(dto.password, 10);
 
     const user = await this.store.user.create({
@@ -52,18 +46,12 @@ export class AuthService implements OnModuleInit {
         location: dto.location,
         skills: [],
         approved: dto.role !== UserRole.Employer,
-        emailVerified: false,
-        emailVerificationToken: verificationToken,
+        emailVerified: true,
+        emailVerificationToken: null,
       },
     });
 
-    await this.emailService.sendMail(
-      user.email,
-      'Verify your JobMatch AI account',
-      `Use this verification token to verify your account: ${verificationToken}`,
-    );
-
-    return this.issueTokens(user, verificationToken);
+    return this.issueTokens(user);
   }
 
   async login(dto: LoginDto) {
@@ -103,7 +91,7 @@ export class AuthService implements OnModuleInit {
       throw new UnauthorizedException('Account is disabled');
     }
 
-    return this.issueTokens(storedToken.user, undefined, payload.jti);
+    return this.issueTokens(storedToken.user, payload.jti);
   }
 
   async logout(refreshToken: string) {
@@ -118,21 +106,6 @@ export class AuthService implements OnModuleInit {
     }
 
     return { message: 'Logged out successfully' };
-  }
-
-  async verifyEmail(token: string) {
-    const user = await this.store.user.findFirst({ where: { emailVerificationToken: token } });
-
-    if (!user) {
-      throw new NotFoundException('Verification token not found');
-    }
-
-    await this.store.user.update({
-      where: { id: user.id },
-      data: { emailVerified: true, emailVerificationToken: null },
-    });
-
-    return { message: 'Email verified successfully' };
   }
 
   async forgotPassword(dto: ForgotPasswordDto) {
@@ -218,7 +191,6 @@ export class AuthService implements OnModuleInit {
 
   private async issueTokens(
     user: { id: string; email: string; role: DbUserRole },
-    verificationToken?: string,
     replacedByToken?: string,
   ) {
     const accessPayload: AuthPayload = {
@@ -260,7 +232,6 @@ export class AuthService implements OnModuleInit {
       accessToken,
       refreshToken,
       user: await this.me(user.id),
-      verificationToken,
     };
   }
 

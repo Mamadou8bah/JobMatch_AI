@@ -1,3 +1,14 @@
+---
+title: JobMatch AI Engine
+emoji: 🎯
+colorFrom: blue
+colorTo: green
+sdk: docker
+app_port: 7860
+pinned: false
+license: mit
+---
+
 # JobMatch AI Engine
 
 Python AI module for **JobMatch AI** — resume parsing, embedding-based job matching, skills-gap analysis, training recommendations, and a career guidance chatbot for Gambian job seekers.
@@ -31,6 +42,7 @@ Create `Ai_Engine/.env` (never commit this file):
 
 ```env
 GEMINI_API_KEY=your_key_here
+GEMINI_MODEL=gemini-2.5-flash
 ```
 
 Get a free key at [Google AI Studio](https://aistudio.google.com).
@@ -87,11 +99,20 @@ Or:
 uvicorn Ai_Engine.server:app --host 0.0.0.0 --port 8000
 ```
 
-Set in the backend `.env`:
+Set in the backend `.env` (or Render environment):
 
 ```env
 AI_ENGINE_URL=http://localhost:8000
 ```
+
+For production with the Hugging Face Space:
+
+```env
+AI_ENGINE_URL=https://mamadoubah-jobmatch.hf.space
+AI_ENGINE_TIMEOUT_MS=60000
+```
+
+See [DEPLOY-HF.md](./DEPLOY-HF.md) for Space deployment steps.
 
 ### Endpoints
 
@@ -121,7 +142,7 @@ All functions return JSON-serializable dicts. On failure:
 
 - **Matching engine** runs locally with `all-MiniLM-L6-v2` — first call loads the model (~90MB).
 - Target: matching completes in **under 2 seconds** after model warm-up.
-- Gemini modules require `GEMINI_API_KEY` in `.env`.
+- Gemini modules require `GEMINI_API_KEY` in `.env` and use **Gemini 2.5 Flash** by default (`GEMINI_MODEL=gemini-2.5-flash`).
 
 ## Static Training Data
 

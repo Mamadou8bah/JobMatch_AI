@@ -14,12 +14,24 @@ from .matching_engine import compute_match_score
 from .resume_parser import parse_resume, parse_resume_text, to_backend_resume_format
 from .skills_gap import analyze_gap
 from .training_recommender import get_recommendations, to_backend_recommendation_format
+from .utils import GEMINI_API_KEY, GEMINI_MODEL
 
 app = FastAPI(
     title="JobMatch AI Engine",
     description="Resume parsing, matching, skills gap, training recommendations, and career chatbot.",
     version="1.0.0",
 )
+
+
+@app.on_event("startup")
+def warmup_models() -> None:
+    """Pre-load the embedding model so the first match request is faster."""
+    try:
+        from .matching_engine import warmup_matching_model
+
+        warmup_matching_model()
+    except Exception:
+        pass
 
 
 class ResumeParseRequest(BaseModel):
@@ -84,9 +96,25 @@ def _raise_if_error(result: dict[str, Any]) -> None:
         raise HTTPException(status_code=422, detail=result.get("message", "AI engine error"))
 
 
+@app.get("/")
+def root() -> dict[str, str | bool]:
+    return {
+        "status": "ok",
+        "service": "jobmatch-ai-engine",
+        "docs": "/docs",
+        "health": "/health",
+        "geminiConfigured": bool(GEMINI_API_KEY),
+    }
+
+
 @app.get("/health")
-def health_check() -> dict[str, str]:
-    return {"status": "ok", "service": "jobmatch-ai-engine"}
+def health_check() -> dict[str, str | bool]:
+    return {
+        "status": "ok",
+        "service": "jobmatch-ai-engine",
+        "geminiModel": GEMINI_MODEL,
+        "geminiConfigured": bool(GEMINI_API_KEY),
+    }
 
 
 @app.post("/resume/parse")

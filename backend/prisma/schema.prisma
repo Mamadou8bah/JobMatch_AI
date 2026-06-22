@@ -49,6 +49,11 @@ enum ChatThreadStatus {
   CLOSED
 }
 
+enum CoachMessageRole {
+  USER
+  ASSISTANT
+}
+
 model User {
   id                     String            @id @default(uuid())
   email                  String            @unique
@@ -83,6 +88,7 @@ model User {
   chatThreadsAsApplicant  ChatThread[]       @relation("ApplicantThreads")
   auditLogs              AuditLog[]        @relation("ActorAuditLogs")
   messagesRead           ChatMessageRead[]
+  coachMessages          CoachMessage[]
 }
 
 model RefreshToken {
@@ -210,6 +216,17 @@ model ChatMessageRead {
   @@unique([messageId, userId])
 }
 
+model CoachMessage {
+  id        String           @id @default(uuid())
+  userId    String
+  role      CoachMessageRole
+  content   String
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
 model AuditLog {
   id         String   @id @default(uuid())
   actorId    String?
@@ -222,4 +239,14 @@ model AuditLog {
 
   @@index([actorId])
   @@index([entityType, entityId])
+}
+
+model PlatformSetting {
+  id                  String   @id @default("global")
+  aiEngineUrl         String?
+  aiMatchThreshold    Int      @default(70)
+  aiEnabled           Boolean  @default(true)
+  careerChatEnabled   Boolean  @default(true)
+  resumeParsingEnabled Boolean @default(true)
+  updatedAt           DateTime @updatedAt
 }
