@@ -23,6 +23,17 @@ app = FastAPI(
 )
 
 
+@app.on_event("startup")
+def warmup_models() -> None:
+    """Pre-load the embedding model so the first match request is faster."""
+    try:
+        from .matching_engine import warmup_matching_model
+
+        warmup_matching_model()
+    except Exception:
+        pass
+
+
 class ResumeParseRequest(BaseModel):
     text: str | None = None
     skills: list[str] | None = None
@@ -83,6 +94,17 @@ class RoadmapRequest(BaseModel):
 def _raise_if_error(result: dict[str, Any]) -> None:
     if result.get("error"):
         raise HTTPException(status_code=422, detail=result.get("message", "AI engine error"))
+
+
+@app.get("/")
+def root() -> dict[str, str | bool]:
+    return {
+        "status": "ok",
+        "service": "jobmatch-ai-engine",
+        "docs": "/docs",
+        "health": "/health",
+        "geminiConfigured": bool(GEMINI_API_KEY),
+    }
 
 
 @app.get("/health")

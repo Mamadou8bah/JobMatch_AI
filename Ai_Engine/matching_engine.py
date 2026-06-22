@@ -22,6 +22,11 @@ def _get_model():
     return _MODEL
 
 
+def warmup_matching_model() -> None:
+    """Load the Sentence-BERT model (used on server startup)."""
+    _get_model()
+
+
 def _match_label(score: float) -> str:
     if score >= 85:
         return "Strong Match"

@@ -45,16 +45,14 @@
     "rxjs": "^7.8.1",
     "@nestjs/cli": "^10.4.5",
     "prisma": "^5.22.0",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "@types/express": "^5.0.0",
+    "@types/multer": "^1.4.12",
+    "@types/node": "^22.10.2"
   },
   "devDependencies": {
     "@nestjs/schematics": "^10.1.4",
     "@nestjs/testing": "^10.4.2",
-    "@types/express": "^5.0.0",
-    "@types/jest": "^29.5.12",
-    "@types/jsonwebtoken": "^9.0.7",
-    "@types/multer": "^1.4.12",
-    "@types/node": "^22.10.2",
     "@types/supertest": "^6.0.3",
     "@typescript-eslint/eslint-plugin": "^8.18.1",
     "@typescript-eslint/parser": "^8.18.1",
