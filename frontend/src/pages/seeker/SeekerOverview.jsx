@@ -55,32 +55,38 @@ export default function SeekerOverview() {
           label="Applied Jobs"
           value={formatNumber(applications.length)}
           icon={<Icon icon={ICONS.applications} size={20} />}
+          to="/seeker/applications"
         />
         <StatCard
           label="Shortlisted"
           value={formatNumber(shortlisted.length)}
           icon={<Icon icon={ICONS.recommendations} size={20} />}
           highlight
+          to="/seeker/applications?status=shortlisted"
         />
         <StatCard
           label="Interviews"
           value={formatNumber(interviews.length)}
           icon={<Icon icon={ICONS.calendar} size={20} />}
+          to="/seeker/applications?status=interview"
         />
         <StatCard
           label="Profile Complete"
           value={`${Math.round((profileComplete / 4) * 100)}%`}
           icon={<Icon icon={ICONS.checkCircle} size={20} />}
+          to="/seeker/profile"
         />
         <StatCard
           label="Skills Listed"
           value={formatNumber(user?.skills?.length ?? 0)}
           icon={<Icon icon={ICONS.target} size={20} />}
+          to="/seeker/profile#profile-skills"
         />
         <StatCard
           label="Open Jobs"
           value={formatNumber(jobs.length)}
           icon={<Icon icon={ICONS.jobs} size={20} />}
+          to="/seeker/recommendations"
         />
       </div>
 

@@ -81,10 +81,22 @@ export default function DashboardLayout({
   const navigate = useNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [logoutOpen, setLogoutOpen] = useState(false);
+  const [logoutLoading, setLogoutLoading] = useState(false);
 
-  const handleLogout = async () => {
-    await logout();
-    navigate("/login");
+  const handleLogout = () => {
+    setLogoutOpen(true);
+  };
+
+  const confirmLogout = async () => {
+    try {
+      setLogoutLoading(true);
+      await logout();
+      setLogoutOpen(false);
+      navigate("/login");
+    } finally {
+      setLogoutLoading(false);
+    }
   };
 
   const closeMenu = () => setMenuOpen(false);
@@ -154,6 +166,37 @@ export default function DashboardLayout({
           <Outlet />
         </div>
       </main>
+
+      {logoutOpen && (
+        <div className="dash-modal-backdrop" onClick={() => !logoutLoading && setLogoutOpen(false)}>
+          <div className="dash-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="logout-modal-title">
+            <div className="dash-modal-header">
+              <h3 id="logout-modal-title">Sign out?</h3>
+              <p className="dash-modal-subtitle">
+                Are you sure you want to sign out of JobMatch AI?
+              </p>
+            </div>
+            <div className="dash-modal-footer">
+              <button
+                type="button"
+                className="dash-btn"
+                onClick={() => setLogoutOpen(false)}
+                disabled={logoutLoading}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="dash-btn danger"
+                onClick={confirmLogout}
+                disabled={logoutLoading}
+              >
+                {logoutLoading ? "Signing out…" : "Sign out"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../../services/api.js";
+import EmployerReviewModal from "../../components/admin/EmployerReviewModal.jsx";
 import StatCard from "../../components/dashboard/StatCard.jsx";
 import StatusBadge from "../../components/dashboard/StatusBadge.jsx";
 import StatsChart, { buildMonthlyData } from "../../components/dashboard/StatsChart.jsx";
@@ -12,6 +13,8 @@ export default function AdminOverview() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [reviewEmployer, setReviewEmployer] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -49,6 +52,19 @@ export default function AdminOverview() {
       : jobs.filter((j) => j.status === statusFilter);
 
   const chartData = buildMonthlyData(jobs, []);
+
+  const handleApproveEmployer = async (id) => {
+    try {
+      setActionLoading(true);
+      const updated = await api.admin.approveUser(id);
+      setUsers((prev) => prev.map((u) => (u.id === id ? updated : u)));
+      setReviewEmployer(null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -107,7 +123,12 @@ export default function AdminOverview() {
               <p className="dash-empty">No pending employer approvals</p>
             ) : (
               pendingEmployers.slice(0, 6).map((employer) => (
-                <div key={employer.id} className="dash-pending-item">
+                <button
+                  key={employer.id}
+                  type="button"
+                  className="dash-pending-item clickable"
+                  onClick={() => setReviewEmployer(employer)}
+                >
                   <div className="dash-company-logo">
                     {companyInitials(employer.companyName || employer.fullName)}
                   </div>
@@ -116,11 +137,11 @@ export default function AdminOverview() {
                       {employer.companyName || employer.fullName}
                     </div>
                     <div className="dash-pending-date">
-                      {formatDate(employer.createdAt)}
+                      {formatDate(employer.createdAt)} · Click to review
                     </div>
                   </div>
                   <StatusBadge status="Pending" />
-                </div>
+                </button>
               ))
             )}
           </div>
@@ -224,6 +245,13 @@ export default function AdminOverview() {
           </table>
         </div>
       </div>
+
+      <EmployerReviewModal
+        employer={reviewEmployer}
+        onClose={() => setReviewEmployer(null)}
+        onApprove={handleApproveEmployer}
+        actionLoading={actionLoading}
+      />
     </>
   );
 }

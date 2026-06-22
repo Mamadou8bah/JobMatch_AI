@@ -112,7 +112,6 @@ export default function HomeScreen() {
               })
             }
             onPress={() => router.push(`/job/${item.id}`)}
-            onApply={() => router.push(`/apply/${item.id}`)}
           />
         )}
         ListEmptyComponent={

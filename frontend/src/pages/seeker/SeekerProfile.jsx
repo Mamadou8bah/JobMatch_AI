@@ -49,6 +49,14 @@ export default function SeekerProfile() {
     };
   }, [authLoading, user?.id]);
 
+  useEffect(() => {
+    if (window.location.hash !== "#profile-skills") return;
+    const el = document.getElementById("profile-skills");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [profileLoading, authLoading]);
+
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
@@ -162,7 +170,7 @@ export default function SeekerProfile() {
                   placeholder="Brief professional summary..."
                 />
               </div>
-              <div className="dash-form-group">
+              <div className="dash-form-group" id="profile-skills">
                 <label className="dash-form-label">Skills (comma-separated)</label>
                 <input
                   className="dash-input"

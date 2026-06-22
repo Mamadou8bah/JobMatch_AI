@@ -25,7 +25,7 @@ function formatSalary(job) {
   return "$150k /Year";
 }
 
-export default function JobCard({ job, onPress, onApply, applied, saved, onToggleSave }) {
+export default function JobCard({ job, onPress, applied, saved, onToggleSave }) {
   const company = job.employer?.companyName || job.employer?.fullName || "Company";
   const initial = company.slice(0, 1).toUpperCase();
   const score = job.match?.score;
@@ -82,10 +82,10 @@ export default function JobCard({ job, onPress, onApply, applied, saved, onToggl
 
       <Pressable
         style={[styles.cta, applied && styles.ctaApplied]}
-        onPress={applied ? onPress : onApply || onPress}
+        onPress={onPress}
       >
-        <Text style={styles.ctaText}>{applied ? "Applied" : "See Details"}</Text>
-        {!applied && <Ionicons name="arrow-up-outline" size={16} color="#fff" style={styles.ctaIcon} />}
+        <Text style={styles.ctaText}>{applied ? "View details" : "See Details"}</Text>
+        <Ionicons name="arrow-up-outline" size={16} color="#fff" style={styles.ctaIcon} />
       </Pressable>
     </View>
   );

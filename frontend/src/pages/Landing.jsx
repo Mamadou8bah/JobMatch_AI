@@ -142,7 +142,7 @@ export default function Landing() {
               trusted marketplace built to reduce skills mismatch and improve hiring outcomes.
             </p>
             <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:justify-center lg:justify-start">
-              <Button variant="landingPrimary" to="/login" className="w-full sm:w-auto">
+              <Button variant="landingPrimary" to={authPath} className="w-full sm:w-auto">
                 Start Matching
               </Button>
               <a href="#features" className="btn btn-outline w-full text-center sm:w-auto">
@@ -304,7 +304,7 @@ export default function Landing() {
               </a>
             ))}
           </div>
-          <Button variant="landingDark" to="/login" className="mt-8 w-full sm:w-auto">
+          <Button variant="landingDark" to={authPath} className="mt-8 w-full sm:w-auto">
             Explore the platform
           </Button>
         </div>
@@ -353,7 +353,7 @@ export default function Landing() {
             description="Upload a CV, extract structured skills data, compare it against job requirements, identify gaps, and recommend the next training step from one connected workflow."
             className="lg:mx-0"
           />
-          <Button variant="landingDark" to="/login" className="mt-8 w-full sm:w-auto">
+          <Button variant="landingDark" to={authPath} className="mt-8 w-full sm:w-auto">
             Create profile
           </Button>
         </div>
@@ -433,7 +433,7 @@ export default function Landing() {
             browsing goals for low-connectivity areas.
           </p>
         </div>
-        <Button variant="landingPrimary" to="/login" className="w-full justify-self-center sm:w-auto">
+        <Button variant="landingPrimary" to={authPath} className="w-full justify-self-center sm:w-auto">
           Create Account
         </Button>
       </section>

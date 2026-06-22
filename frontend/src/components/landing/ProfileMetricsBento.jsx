@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import ICONS, { Icon } from "../dashboard/icons.jsx";
+import { useAuth } from "../../context/AuthContext.jsx";
 
 function MetricCard({ className, menu, children }) {
   return (
@@ -15,6 +16,9 @@ function MetricCard({ className, menu, children }) {
 }
 
 export default function ProfileMetricsBento() {
+  const { user } = useAuth();
+  const authPath = user ? "/portal" : "/login";
+
   return (
     <div className="order-2 grid gap-4 sm:grid-cols-2 lg:order-1 lg:grid-rows-2 lg:gap-5 lg:items-stretch">
       {/* Top left — Employer Interest */}
@@ -60,7 +64,7 @@ export default function ProfileMetricsBento() {
           </div>
         </div>
         <Link
-          to="/login"
+          to={authPath}
           className="mt-4 flex min-h-12 items-center justify-center rounded-full bg-brand-lime text-sm font-black text-brand-dark no-underline lg:mt-6"
         >
           View Match

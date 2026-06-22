@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../../services/api.js";
+import EmployerReviewModal from "../../components/admin/EmployerReviewModal.jsx";
 import StatusBadge from "../../components/dashboard/StatusBadge.jsx";
 import { formatDate } from "../../components/dashboard/icons.jsx";
 
@@ -9,6 +10,8 @@ export default function AdminUsers() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionMsg, setActionMsg] = useState("");
+  const [reviewEmployer, setReviewEmployer] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     api.users
@@ -24,8 +27,14 @@ export default function AdminUsers() {
     return u.role === filter;
   });
 
+  const updateUser = (updated) => {
+    setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+    setReviewEmployer((current) => (current?.id === updated.id ? updated : current));
+  };
+
   const handleAction = async (id, action) => {
     try {
+      setActionLoading(true);
       let updated;
       switch (action) {
         case "approve":
@@ -43,11 +52,16 @@ export default function AdminUsers() {
         default:
           return;
       }
-      setUsers((prev) => prev.map((u) => (u.id === id ? updated : u)));
-      setActionMsg(`User updated successfully`);
+      updateUser(updated);
+      setActionMsg("User updated successfully");
       setTimeout(() => setActionMsg(""), 3000);
+      if (action === "approve") {
+        setReviewEmployer(null);
+      }
     } catch (err) {
       setError(err.message);
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -101,7 +115,19 @@ export default function AdminUsers() {
               ) : (
                 filtered.map((user) => (
                   <tr key={user.id}>
-                    <td>{user.fullName}</td>
+                    <td>
+                      {user.role === "employer" ? (
+                        <button
+                          type="button"
+                          className="dash-link-btn"
+                          onClick={() => setReviewEmployer(user)}
+                        >
+                          {user.companyName || user.fullName}
+                        </button>
+                      ) : (
+                        user.fullName
+                      )}
+                    </td>
                     <td>{user.email}</td>
                     <td style={{ textTransform: "capitalize" }}>
                       {user.role?.replace(/_/g, " ")}
@@ -118,24 +144,23 @@ export default function AdminUsers() {
                     <td>{formatDate(user.createdAt)}</td>
                     <td>
                       <div className="dash-actions">
-                        {user.role === "employer" && !user.blocked && (
-                          user.approved ? (
-                            <button
-                              type="button"
-                              className="dash-btn sm"
-                              onClick={() => handleAction(user.id, "unapprove")}
-                            >
-                              Unapprove
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              className="dash-btn sm primary"
-                              onClick={() => handleAction(user.id, "approve")}
-                            >
-                              Approve
-                            </button>
-                          )
+                        {user.role === "employer" && (
+                          <button
+                            type="button"
+                            className="dash-btn sm"
+                            onClick={() => setReviewEmployer(user)}
+                          >
+                            View
+                          </button>
+                        )}
+                        {user.role === "employer" && user.approved && !user.blocked && (
+                          <button
+                            type="button"
+                            className="dash-btn sm"
+                            onClick={() => handleAction(user.id, "unapprove")}
+                          >
+                            Unapprove
+                          </button>
                         )}
                         {user.blocked ? (
                           <button
@@ -165,6 +190,14 @@ export default function AdminUsers() {
           </table>
         </div>
       </div>
+
+      <EmployerReviewModal
+        employer={reviewEmployer}
+        onClose={() => setReviewEmployer(null)}
+        onApprove={(id) => handleAction(id, "approve")}
+        onUnapprove={(id) => handleAction(id, "unapprove")}
+        actionLoading={actionLoading}
+      />
     </>
   );
 }
