@@ -1,7 +1,8 @@
-import { getDemoResponse } from "./demoApi.js";
-import { isDemoSession } from "./demoSession.js";
+const PRODUCTION_API_BASE = "https://jobmatchgambia.onrender.com/api";
 
-const API_BASE = import.meta.env.VITE_API_URL || "/api";
+const API_BASE =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? "/api" : PRODUCTION_API_BASE);
 
 class ApiError extends Error {
   constructor(message, status, data) {
@@ -49,13 +50,6 @@ async function refreshAccessToken() {
 }
 
 async function request(path, options = {}) {
-  if (isDemoSession()) {
-    const demoResponse = getDemoResponse(path, options);
-    if (demoResponse != null) {
-      return demoResponse;
-    }
-  }
-
   const { accessToken } = getTokens();
   const headers = { ...options.headers };
 

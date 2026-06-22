@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import AuthShell from "../components/auth/AuthShell.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
-import { DEMO_ACCOUNTS, DEMO_PASSWORD } from "../services/demoSession.js";
 
 const ROLES = [
   { value: "job_seeker", label: "Job seeker" },
@@ -68,13 +67,6 @@ export default function Login() {
     setError("");
   };
 
-  const fillDemo = (account) => {
-    setEmail(account.email);
-    setPassword(account.password);
-    setError("");
-    setMode("login");
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -122,17 +114,6 @@ export default function Login() {
       {error && (
         <div className="auth-alert" role="alert">
           {error}
-        </div>
-      )}
-
-      {!isRegister && (
-        <div className="auth-demo">
-          <span className="auth-demo-label">Demo · {DEMO_PASSWORD}</span>
-          {DEMO_ACCOUNTS.map((account) => (
-            <button key={account.email} type="button" onClick={() => fillDemo(account)}>
-              {account.label}
-            </button>
-          ))}
         </div>
       )}
 

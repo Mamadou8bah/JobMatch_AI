@@ -30,6 +30,9 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "apiUrl": "https://jobmatchgambia.onrender.com/api"
     }
   }
 }
