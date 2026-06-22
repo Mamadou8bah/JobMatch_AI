@@ -1,0 +1,11 @@
+google-genai>=1.0.0
+sentence-transformers
+scikit-learn
+numpy
+pdfplumber
+PyMuPDF
+python-docx
+python-dotenv
+fastapi
+uvicorn[standard]
+python-multipart

@@ -1,3 +1,14 @@
+---
+title: JobMatch AI Engine
+emoji: 🎯
+colorFrom: blue
+colorTo: green
+sdk: docker
+app_port: 7860
+pinned: false
+license: mit
+---
+
 # JobMatch AI Engine
 
 Python AI module for **JobMatch AI** — resume parsing, embedding-based job matching, skills-gap analysis, training recommendations, and a career guidance chatbot for Gambian job seekers.
@@ -88,11 +99,20 @@ Or:
 uvicorn Ai_Engine.server:app --host 0.0.0.0 --port 8000
 ```
 
-Set in the backend `.env`:
+Set in the backend `.env` (or Render environment):
 
 ```env
 AI_ENGINE_URL=http://localhost:8000
 ```
+
+For production with the Hugging Face Space:
+
+```env
+AI_ENGINE_URL=https://mamadoubah-jobmatch.hf.space
+AI_ENGINE_TIMEOUT_MS=60000
+```
+
+See [DEPLOY-HF.md](./DEPLOY-HF.md) for Space deployment steps.
 
 ### Endpoints
 
