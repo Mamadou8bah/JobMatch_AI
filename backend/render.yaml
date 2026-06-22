@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: jobmatch-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install && npm run render-build
+    startCommand: npm run start:prod
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SEED_ON_STARTUP
+        value: false
