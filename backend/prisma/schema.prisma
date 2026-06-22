@@ -223,3 +223,13 @@ model AuditLog {
   @@index([actorId])
   @@index([entityType, entityId])
 }
+
+model PlatformSetting {
+  id                  String   @id @default("global")
+  aiEngineUrl         String?
+  aiMatchThreshold    Int      @default(70)
+  aiEnabled           Boolean  @default(true)
+  careerChatEnabled   Boolean  @default(true)
+  resumeParsingEnabled Boolean @default(true)
+  updatedAt           DateTime @updatedAt
+}

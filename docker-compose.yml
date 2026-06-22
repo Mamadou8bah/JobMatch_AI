@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: jobmatch-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: jobmatch
+      POSTGRES_PASSWORD: jobmatch
+      POSTGRES_DB: jobmatch
+    ports:
+      - "5432:5432"
+    volumes:
+      - jobmatch_pg_data:/var/lib/postgresql/data
+
+volumes:
+  jobmatch_pg_data:

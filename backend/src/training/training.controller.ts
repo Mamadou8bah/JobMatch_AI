@@ -1,4 +1,5 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '../common/enums/role.enum';
@@ -14,6 +15,15 @@ export class TrainingController {
   @Get()
   list(@Query('skill') skill?: string) {
     return this.trainingService.listCourses(skill);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('recommendations/:jobId')
+  personalized(
+    @Req() request: Request & { user: { sub: string } },
+    @Param('jobId') jobId: string,
+  ) {
+    return this.trainingService.getPersonalizedRecommendations(request.user.sub, jobId);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

@@ -76,10 +76,16 @@ export class ApplicationsService {
   }
 
   async listMyApplications(applicantId: string) {
-    return this.store.application.findMany({
+    const applications = await this.store.application.findMany({
       where: { applicantId },
+      include: {
+        job: {
+          include: { employer: true },
+        },
+      },
       orderBy: { createdAt: 'desc' },
     });
+    return applications.map((app) => this.serializeApplication(app));
   }
 
   async listJobApplications(jobId: string, requesterId: string, role: UserRole) {
@@ -89,10 +95,15 @@ export class ApplicationsService {
       throw new ForbiddenException('You can only view applicants for your own jobs');
     }
 
-    return this.store.application.findMany({
+    const applications = await this.store.application.findMany({
       where: { jobId },
-      orderBy: { createdAt: 'desc' },
+      include: {
+        applicant: true,
+        job: { include: { employer: true } },
+      },
+      orderBy: [{ matchScore: 'desc' }, { createdAt: 'desc' }],
     });
+    return applications.map((app) => this.serializeApplication(app));
   }
 
   async updateApplicationStatus(applicationId: string, requesterId: string, role: UserRole, dto: UpdateApplicationStatusDto) {
@@ -109,14 +120,72 @@ export class ApplicationsService {
     const updated = await this.store.application.update({
       where: { id: applicationId },
       data: { status: dto.status.toUpperCase() as DbApplication['status'] },
+      include: {
+        applicant: true,
+        job: { include: { employer: true } },
+      },
     });
 
+    const statusLabel = dto.status;
+    const isInterview = dto.status === 'interview';
+
     await this.notificationsService.createNotification(application.applicantId, {
-      title: 'Application status updated',
-      message: `Your application for ${job.title} is now ${dto.status}.`,
+      title: isInterview ? 'Interview invitation' : 'Application status updated',
+      message: isInterview
+        ? dto.interviewMessage ||
+          `You have been invited to interview for ${job.title}. The employer will contact you with details.`
+        : `Your application for ${job.title} is now ${statusLabel}.`,
       type: 'application',
     });
 
-    return updated;
+    return this.serializeApplication(updated);
+  }
+
+  private serializeApplication(
+    application: DbApplication & {
+      applicant?: {
+        id: string;
+        fullName: string;
+        email: string;
+        location: string | null;
+        skills: string[];
+      } | null;
+      job?: {
+        id: string;
+        title: string;
+        location: string | null;
+        employer: {
+          id: string;
+          fullName: string;
+          companyName: string | null;
+        };
+      } | null;
+    },
+  ) {
+    return {
+      ...application,
+      status: application.status.toLowerCase(),
+      applicant: application.applicant
+        ? {
+            id: application.applicant.id,
+            fullName: application.applicant.fullName,
+            email: application.applicant.email,
+            location: application.applicant.location,
+            skills: application.applicant.skills,
+          }
+        : undefined,
+      job: application.job
+        ? {
+            id: application.job.id,
+            title: application.job.title,
+            location: application.job.location,
+            employer: {
+              id: application.job.employer.id,
+              fullName: application.job.employer.fullName,
+              companyName: application.job.employer.companyName,
+            },
+          }
+        : undefined,
+    };
   }
 }

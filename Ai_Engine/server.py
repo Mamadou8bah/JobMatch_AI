@@ -14,6 +14,7 @@ from .matching_engine import compute_match_score
 from .resume_parser import parse_resume, parse_resume_text, to_backend_resume_format
 from .skills_gap import analyze_gap
 from .training_recommender import get_recommendations, to_backend_recommendation_format
+from .utils import GEMINI_API_KEY, GEMINI_MODEL
 
 app = FastAPI(
     title="JobMatch AI Engine",
@@ -85,8 +86,13 @@ def _raise_if_error(result: dict[str, Any]) -> None:
 
 
 @app.get("/health")
-def health_check() -> dict[str, str]:
-    return {"status": "ok", "service": "jobmatch-ai-engine"}
+def health_check() -> dict[str, str | bool]:
+    return {
+        "status": "ok",
+        "service": "jobmatch-ai-engine",
+        "geminiModel": GEMINI_MODEL,
+        "geminiConfigured": bool(GEMINI_API_KEY),
+    }
 
 
 @app.post("/resume/parse")

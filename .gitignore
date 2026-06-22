@@ -9,5 +9,16 @@ __pycache__/
 .mypy_cache/
 
 # Node backend (optional)
+backend/.env
 backend/node_modules/
 backend/dist/
+
+# Mobile app
+mobile-app/node_modules/
+mobile-app/.expo/
+mobile-app/dist/
+
+.claude
+claude
+
+.agents

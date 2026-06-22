@@ -1,4 +1,4 @@
-google-generativeai
+google-genai>=1.0.0
 sentence-transformers
 scikit-learn
 numpy

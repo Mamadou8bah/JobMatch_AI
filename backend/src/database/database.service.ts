@@ -1,10 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import * as bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
+import { runDatabaseSeed } from '../../prisma/seed-data';
 import { PrismaService } from './prisma.service';
 
 @Injectable()
-export class DatabaseService extends PrismaService {
+export class DatabaseService extends PrismaService implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(DatabaseService.name);
+
   createId() {
     return randomUUID();
   }
@@ -13,27 +17,23 @@ export class DatabaseService extends PrismaService {
     return new Date();
   }
 
-  async seedAdminIfNeeded() {
-    const existingAdmin = await this.user.findFirst({
-      where: { email: 'admin@jobmatch.ai' },
-    });
+  async onModuleInit() {
+    await super.onModuleInit();
+    await this.seedOnStartup();
+  }
 
-    if (existingAdmin) {
-      return existingAdmin;
+  async seedOnStartup() {
+    if (process.env.SEED_ON_STARTUP === 'false') {
+      this.logger.log('Database seed skipped (SEED_ON_STARTUP=false)');
+      return;
     }
 
-    return this.user.create({
-      data: {
-        id: this.createId(),
-        email: 'admin@jobmatch.ai',
-        passwordHash: '$2a$10$adminplaceholderhash',
-        role: 'ADMIN',
-        fullName: 'System Admin',
-        skills: [],
-        approved: true,
-        emailVerified: true,
-      },
-    });
+    try {
+      const counts = await runDatabaseSeed(this);
+      this.logger.log(`Database seed ready — ${counts.users} users, ${counts.jobs} jobs, ${counts.applications} applications, ${counts.trainingCourses} courses`);
+    } catch (error) {
+      this.logger.error('Database seed failed', error instanceof Error ? error.stack : error);
+    }
   }
 
   toJson(value: any): Prisma.InputJsonValue {

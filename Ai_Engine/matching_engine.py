@@ -96,20 +96,37 @@ def compute_match_score(
         candidate_text = _build_candidate_text(merged)
         job_text = _build_job_text(merged)
 
-        if not candidate_text or not job_text:
-            return error_response("Missing candidate or job data for matching.")
-
-        model = _get_model()
-        embeddings = model.encode([candidate_text, job_text])
-        embedding_similarity = float(cosine_similarity([embeddings[0]], [embeddings[1]])[0][0])
-        embedding_similarity = max(0.0, min(1.0, embedding_similarity))
-
         required_skills = merged.get("job_required_skills") or merged.get("requiredSkills") or []
         candidate_skills = merged.get("candidate_skills") or merged.get("skills") or []
         gap_result = analyze_gap(candidate_skills, required_skills)
 
         matched_skills = gap_result.get("matched_skills") or []
         missing_skills = gap_result.get("missing_skills") or []
+
+        if not job_text:
+            return error_response("Missing job data for matching.")
+
+        if not candidate_text:
+            if required_skills:
+                skills_overlap = len(matched_skills) / len(required_skills)
+            else:
+                skills_overlap = 0.0
+            match_score = round(skills_overlap * 100, 1)
+            return {
+                "match_score": match_score,
+                "matchScore": match_score,
+                "score": int(round(match_score)),
+                "match_label": _match_label(match_score),
+                "matched_skills": matched_skills,
+                "matchedSkills": matched_skills,
+                "missing_skills": missing_skills,
+                "missingSkills": missing_skills,
+            }
+
+        model = _get_model()
+        embeddings = model.encode([candidate_text, job_text])
+        embedding_similarity = float(cosine_similarity([embeddings[0]], [embeddings[1]])[0][0])
+        embedding_similarity = max(0.0, min(1.0, embedding_similarity))
 
         if required_skills:
             skills_overlap = len(matched_skills) / len(required_skills)

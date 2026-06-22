@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard';
 import { UserRole } from '../common/enums/role.enum';
 import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -13,9 +14,10 @@ import { JobsService } from './jobs.service';
 export class JobsController {
   constructor(private readonly jobsService: JobsService) {}
 
+  @UseGuards(OptionalJwtAuthGuard)
   @Get()
-  async list(@Req() request: Request & { user?: { sub: string } }, @Query() query: JobQueryDto) {
-    return this.jobsService.listJobs(request.user?.sub, query);
+  async list(@Req() request: Request & { user?: { sub: string; role: UserRole } }, @Query() query: JobQueryDto) {
+    return this.jobsService.listJobs(request.user?.sub, request.user?.role, query);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -25,9 +27,10 @@ export class JobsController {
     return this.jobsService.createJob(request.user.sub, request.user.role, dto);
   }
 
+  @UseGuards(OptionalJwtAuthGuard)
   @Get(':id')
-  async getById(@Param('id') id: string) {
-    return this.jobsService.getJobById(id);
+  async getById(@Req() request: Request & { user?: { sub: string } }, @Param('id') id: string) {
+    return this.jobsService.getJobById(id, request.user?.sub);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

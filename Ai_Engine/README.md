@@ -31,6 +31,7 @@ Create `Ai_Engine/.env` (never commit this file):
 
 ```env
 GEMINI_API_KEY=your_key_here
+GEMINI_MODEL=gemini-2.5-flash
 ```
 
 Get a free key at [Google AI Studio](https://aistudio.google.com).
@@ -121,7 +122,7 @@ All functions return JSON-serializable dicts. On failure:
 
 - **Matching engine** runs locally with `all-MiniLM-L6-v2` — first call loads the model (~90MB).
 - Target: matching completes in **under 2 seconds** after model warm-up.
-- Gemini modules require `GEMINI_API_KEY` in `.env`.
+- Gemini modules require `GEMINI_API_KEY` in `.env` and use **Gemini 2.5 Flash** by default (`GEMINI_MODEL=gemini-2.5-flash`).
 
 ## Static Training Data
 

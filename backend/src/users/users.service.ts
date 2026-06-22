@@ -10,16 +10,18 @@ import { randomUUID } from 'crypto';
 import { mkdir, writeFile } from 'fs/promises';
 import { extname, join } from 'path';
 import { fromDbUserRole } from '../common/mappers';
+import { mergeSkills } from '../common/merge-skills';
 import { UserRole } from '../common/enums/role.enum';
-import { AiConnectionService } from '../ai-connection/ai-connection.service';
+import { AiEngineClient } from '../ai-connection/ai-engine.client';
 import { DatabaseService } from '../database/database.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { parseCvLocally } from './cv-parser.fallback';
 
 @Injectable()
 export class UsersService {
   constructor(
     private readonly store: DatabaseService,
-    private readonly aiConnectionService: AiConnectionService,
+    private readonly aiEngineClient: AiEngineClient,
   ) {}
 
   async listUsers() {
@@ -50,6 +52,9 @@ export class UsersService {
         location: dto.location,
         bio: dto.bio,
         skills: dto.skills,
+        experienceYears: dto.experienceYears,
+        companyName: dto.companyName,
+        companyDescription: dto.companyDescription,
       },
     });
 
@@ -70,11 +75,9 @@ export class UsersService {
     }
 
     this.assertSupportedCvFile(file);
-    const parsed = await this.aiConnectionService.parseResumeFile({
-      fileName: file.originalname,
-      mimeType: file.mimetype,
-      contentBase64: file.buffer.toString('base64'),
-    });
+
+    const { parsed, parsedWithAi } = await this.parseUploadedCv(file);
+
     const uploadDirectory = process.env.CV_UPLOAD_DIR ?? join(process.cwd(), 'uploads', 'cvs');
     await mkdir(uploadDirectory, { recursive: true });
 
@@ -88,7 +91,10 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
-    const mergedSkills = Array.from(new Set([...(existingUser.skills ?? []), ...parsed.skills]));
+    const mergedSkills = mergeSkills(existingUser.skills, parsed.skills);
+    const addedSkills = mergedSkills.filter(
+      (skill) => !(existingUser.skills ?? []).some((existing) => existing.toLowerCase() === skill.toLowerCase()),
+    );
     const updatedUser = await this.store.user.update({
       where: { id: currentUserId },
       data: {
@@ -103,7 +109,29 @@ export class UsersService {
     return {
       user: this.sanitizeUser(updatedUser),
       parsed,
+      parsedWithAi,
+      addedSkills,
     };
+  }
+
+  private async parseUploadedCv(file: Express.Multer.File) {
+    try {
+      const parsed = await this.aiEngineClient.parseResumeFile({
+        fileName: file.originalname,
+        mimeType: file.mimetype,
+        contentBase64: file.buffer.toString('base64'),
+      });
+
+      return {
+        parsed,
+        parsedWithAi: parsed.parsedWithAi !== false,
+      };
+    } catch {
+      return {
+        parsed: await parseCvLocally(file),
+        parsedWithAi: false,
+      };
+    }
   }
 
   assertAdmin(role: UserRole) {
