@@ -16,7 +16,6 @@ import GlassBackground from "../../components/GlassBackground";
 import GlassSurface from "../../components/GlassSurface";
 import BrandLogo from "../../components/BrandLogo";
 import { useAuth } from "../../context/AuthContext";
-import { DEMO_ACCOUNT, DEMO_PASSWORD } from "../../services/demoSession";
 import { colors, radius, spacing } from "../../constants/theme";
 
 export default function LoginScreen() {
@@ -84,18 +83,6 @@ export default function LoginScreen() {
                 )}
               </Pressable>
 
-              <Pressable
-                style={styles.demoBtn}
-                onPress={() => {
-                  setEmail(DEMO_ACCOUNT.email);
-                  setPassword(DEMO_PASSWORD);
-                }}
-              >
-                <Text style={styles.demoText}>
-                  Demo: {DEMO_ACCOUNT.email} / {DEMO_PASSWORD}
-                </Text>
-              </Pressable>
-
               <Link href="/(auth)/register" style={styles.link}>
                 Create a job seeker account
               </Link>
@@ -137,8 +124,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   primaryBtnText: { color: "#fff", fontWeight: "700", fontSize: 16 },
-  demoBtn: { marginTop: spacing.md, alignItems: "center" },
-  demoText: { color: colors.primary, fontSize: 13, fontWeight: "600" },
   link: {
     marginTop: spacing.lg,
     textAlign: "center",

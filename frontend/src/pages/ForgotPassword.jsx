@@ -9,21 +9,16 @@ export default function ForgotPassword() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const [resetToken, setResetToken] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
     setMessage("");
-    setResetToken("");
 
     try {
-      const data = await api.auth.forgotPassword(email);
-      setMessage(data.message || "If the email exists, a reset token has been generated.");
-      if (data.resetToken) {
-        setResetToken(data.resetToken);
-      }
+      await api.auth.forgotPassword(email);
+      setMessage("If an account exists for that email, password reset instructions have been sent.");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -44,18 +39,6 @@ export default function ForgotPassword() {
 
           {error && <div className="auth-alert" role="alert">{error}</div>}
           {message && <div className="auth-alert" style={{ borderColor: "#bbf7d0", background: "#f0fdf4", color: "#166534" }}>{message}</div>}
-
-          {resetToken && (
-            <div className="auth-demo-credentials">
-              <p>Reset token (dev/demo):</p>
-              <code>{resetToken}</code>
-              <p style={{ marginTop: 10 }}>
-                <Link to={`/reset-password?token=${encodeURIComponent(resetToken)}`}>
-                  Continue to reset password
-                </Link>
-              </p>
-            </div>
-          )}
 
           <form className="auth-form" onSubmit={handleSubmit}>
             <label className="auth-field">

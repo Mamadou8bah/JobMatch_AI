@@ -1,12 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { api, clearTokens, getTokens } from "../services/api.js";
-import {
-  disableDemoSession,
-  enableDemoSession,
-  getDemoUser,
-  isDemoSession,
-  matchesDemoAccount,
-} from "../services/demoSession.js";
 
 const AuthContext = createContext(null);
 
@@ -16,29 +9,31 @@ const ROLE_ROUTES = {
   admin: "/admin",
 };
 
+function clearLegacyDemoStorage() {
+  ["demoSession", "demoRole", "demoEmail"].forEach((key) => localStorage.removeItem(key));
+  Object.keys(localStorage)
+    .filter((key) => key.startsWith("demoStore_"))
+    .forEach((key) => localStorage.removeItem(key));
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const loadUser = useCallback(async () => {
-    if (isDemoSession()) {
-      const demoUser = getDemoUser();
-      setUser(demoUser);
-      setLoading(false);
-      return demoUser;
-    }
-
     const { accessToken } = getTokens();
     if (!accessToken) {
       setUser(null);
       setLoading(false);
       return null;
     }
+
     try {
       const me = await api.auth.me();
       setUser(me);
       return me;
     } catch {
+      clearTokens();
       setUser(null);
       return null;
     } finally {
@@ -47,58 +42,28 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
+    clearLegacyDemoStorage();
     loadUser();
   }, [loadUser]);
 
   const login = async (email, password) => {
-    const demoAccount = matchesDemoAccount(email, password);
-
-    if (demoAccount) {
-      try {
-        const data = await api.auth.login(email, password);
-        disableDemoSession();
-        setUser(data.user);
-        return data.user;
-      } catch {
-        clearTokens();
-        enableDemoSession(demoAccount.email);
-        const demoUser = getDemoUser();
-        setUser(demoUser);
-        return demoUser;
-      }
-    }
-
     const data = await api.auth.login(email, password);
-    disableDemoSession();
     setUser(data.user);
     return data.user;
   };
 
   const register = async (payload) => {
     const data = await api.auth.register(payload);
-    disableDemoSession();
     setUser(data.user);
     return data.user;
   };
 
   const logout = async () => {
-    if (isDemoSession()) {
-      disableDemoSession();
-      setUser(null);
-      return;
-    }
-
     await api.auth.logout();
     setUser(null);
   };
 
   const refreshUser = async () => {
-    if (isDemoSession()) {
-      const demoUser = getDemoUser();
-      setUser(demoUser);
-      return demoUser;
-    }
-
     const me = await api.auth.me();
     setUser(me);
     return me;

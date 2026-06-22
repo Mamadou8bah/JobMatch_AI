@@ -1,8 +1,6 @@
 import Constants from "expo-constants";
 import { Platform } from "react-native";
 import { clearTokens, getTokens, setTokens } from "./storage.js";
-import { getDemoResponse } from "./demoApi.js";
-import { isDemoSession } from "./demoSession.js";
 import {
   getCachedApplications,
   getCachedCourses,
@@ -13,6 +11,9 @@ import {
 } from "./cache.js";
 
 function getDefaultApiBase() {
+  if (!__DEV__) {
+    return "https://jobmatchgambia.onrender.com/api";
+  }
   // Android emulator maps host machine to 10.0.2.2
   if (Platform.OS === "android") {
     return "http://10.0.2.2:3000/api";
@@ -55,11 +56,6 @@ async function refreshAccessToken() {
 }
 
 async function request(path, options = {}) {
-  if (await isDemoSession()) {
-    const demoResponse = await getDemoResponse(path, options);
-    if (demoResponse != null) return demoResponse;
-  }
-
   const { accessToken } = await getTokens();
   const headers = { ...options.headers };
 
@@ -113,10 +109,8 @@ async function request(path, options = {}) {
         null
       );
     }
-    if (!(await isDemoSession())) {
-      const cached = await getOfflineFallback(path);
-      if (cached != null) return cached;
-    }
+    const cached = await getOfflineFallback(path);
+    if (cached != null) return cached;
     throw err;
   } finally {
     clearTimeout(timeout);
