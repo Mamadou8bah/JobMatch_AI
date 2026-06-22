@@ -2,6 +2,7 @@ import { useState } from "react";
 import BrandLogo from "../BrandLogo.jsx";
 import ICONS, { Icon } from "../dashboard/icons.jsx";
 import Button from "../ui/Button.jsx";
+import { useAuth } from "../../context/AuthContext.jsx";
 import { cn } from "../../lib/cn.js";
 
 const links = [
@@ -13,6 +14,9 @@ const links = [
 
 export default function LandingNav() {
   const [open, setOpen] = useState(false);
+  const { user } = useAuth();
+  const authPath = user ? "/portal" : "/login";
+  const authLabel = user ? "Portal" : "Sign in";
 
   const close = () => setOpen(false);
 
@@ -40,8 +44,8 @@ export default function LandingNav() {
         </nav>
 
         <div className="hidden items-center gap-3 sm:flex">
-          <Button variant="landingPrimary" to="/login" className="!min-h-11 !px-5 !text-sm">
-            Sign in <Icon icon={ICONS.arrowRight} size={16} />
+          <Button variant="landingPrimary" to={authPath} className="!min-h-11 !px-5 !text-sm">
+            {authLabel} <Icon icon={ICONS.arrowRight} size={16} />
           </Button>
           <a
             href="#download"
@@ -83,8 +87,8 @@ export default function LandingNav() {
           ))}
         </nav>
         <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-          <Button variant="landingPrimary" to="/login" className="w-full !min-h-11" onClick={close}>
-            Sign in
+          <Button variant="landingPrimary" to={authPath} className="w-full !min-h-11" onClick={close}>
+            {authLabel}
           </Button>
           <a href="#download" className="btn btn-outline w-full !min-h-11 !text-center" onClick={close}>
             Mobile Access

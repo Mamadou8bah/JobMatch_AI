@@ -56,7 +56,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const { login, register, getDashboardRoute } = useAuth();
+  const { login, register } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname;
@@ -74,13 +74,13 @@ export default function Login() {
 
     try {
       if (isRegister) {
-        const user = await register({ email, password, fullName, role });
-        navigate(from || getDashboardRoute(user.role), { replace: true });
+        await register({ email, password, fullName, role });
+        navigate(from || "/portal", { replace: true });
         return;
       }
 
-      const user = await login(email, password);
-      navigate(from || getDashboardRoute(user.role), { replace: true });
+      await login(email, password);
+      navigate(from || "/portal", { replace: true });
     } catch (err) {
       setError(err.message || "Something went wrong. Try again.");
     } finally {

@@ -11,6 +11,8 @@ DATABASE_URL="postgresql://postgres:YOUR_PASSWORD@localhost:5432/jobmatch?schema
 SEED_ON_STARTUP=true
 ```
 
+Set `ADMIN_EMAIL` and `ADMIN_PASSWORD` to create or update the platform admin on each seed run (including startup). The password hash is refreshed whenever the env value changes.
+
 ### First-time schema
 
 ```bash
@@ -22,19 +24,20 @@ This runs `prisma generate`, `db push`, and a one-off seed.
 
 ### Auto-seed on backend start
 
-Every time you run `npm run start:dev`, the backend **re-runs an idempotent seed** (upserts demo data). Set `SEED_ON_STARTUP=false` in production.
+Every time the backend starts, it **re-runs an idempotent seed** (upserts demo data). This is enabled by default (`SEED_ON_STARTUP=true`). Set `SEED_ON_STARTUP=false` only if you want to skip seeding.
 
 Seeded data includes:
 
 | Entity | Count (approx.) |
 |--------|-----------------|
-| Users | 24 (2 admins, 8 employers, 14 job seekers) |
+| Users | 23 (1 admin from env, 8 employers, 14 job seekers) |
 | Jobs | 25 (published, draft, pending, closed, rejected) |
 | Applications | 28 |
 | Training courses | 21 |
-| Notifications | 15 |
-| Chat threads & messages | 3 threads, 7 messages |
-| Audit logs | 6 |
+| Notifications | 21 |
+| Chat threads & messages | 7 threads, 16 messages |
+| Coach messages | 10 (career coach history for demo seekers) |
+| Audit logs | 9 |
 
 ### Run the API
 
@@ -49,7 +52,7 @@ Swagger: `http://localhost:3000/api/docs`
 
 | Role | Email |
 |------|-------|
-| Admin | admin@jobmatch.ai (`Admin12345!`) or admin@gmail.com |
+| Admin | Set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in env (upserted on each seed) |
 | Employer | employer@gmail.com (Atlantic Tech) |
 | Job seeker | bah@gmail.com |
 | Job seeker | fatou@gmail.com |

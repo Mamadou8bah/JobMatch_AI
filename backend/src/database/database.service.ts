@@ -30,7 +30,11 @@ export class DatabaseService extends PrismaService implements OnModuleInit, OnMo
 
     try {
       const counts = await runDatabaseSeed(this);
-      this.logger.log(`Database seed ready — ${counts.users} users, ${counts.jobs} jobs, ${counts.applications} applications, ${counts.trainingCourses} courses`);
+      this.logger.log(
+        `Database seed ready — ${counts.users} users, ${counts.jobs} jobs, ${counts.applications} applications, ` +
+          `${counts.trainingCourses} courses, ${counts.notifications} notifications, ${counts.chatThreads} threads, ` +
+          `${counts.chatMessages} messages, ${counts.coachMessages} coach messages, ${counts.auditLogs} audit logs`,
+      );
     } catch (error) {
       this.logger.error('Database seed failed', error instanceof Error ? error.stack : error);
     }

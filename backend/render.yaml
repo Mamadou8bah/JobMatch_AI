@@ -9,4 +9,8 @@ services:
       - key: NODE_ENV
         value: production
       - key: SEED_ON_STARTUP
-        value: false
+        value: true
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false

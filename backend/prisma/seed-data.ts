@@ -1,6 +1,7 @@
 import {
   ApplicationStatus,
   ChatThreadStatus,
+  CoachMessageRole,
   JobStatus,
   NotificationType,
   PrismaClient,
@@ -10,12 +11,10 @@ import {
 import * as bcrypt from 'bcryptjs';
 
 export const SEED_PASSWORD_DEMO = '11111111';
-export const SEED_PASSWORD_ADMIN = 'Admin12345!';
 
 export const SEED_IDS = {
   users: {
     admin: 'a0000000-0000-4000-8000-000000000001',
-    adminGmail: 'a0000000-0000-4000-8000-000000000002',
     bah: 'a0000000-0000-4000-8000-000000000011',
     fatou: 'a0000000-0000-4000-8000-000000000012',
     laminSeeker: 'a0000000-0000-4000-8000-000000000013',
@@ -70,6 +69,10 @@ export const SEED_IDS = {
     bahFrontend: 'c0000000-0000-4000-8000-000000000001',
     fatouFrontend: 'c0000000-0000-4000-8000-000000000002',
     bahData: 'c0000000-0000-4000-8000-000000000003',
+    modouBackend: 'c0000000-0000-4000-8000-000000000004',
+    omarSales: 'c0000000-0000-4000-8000-000000000005',
+    mariamaAccountant: 'c0000000-0000-4000-8000-000000000006',
+    fatouMobile: 'c0000000-0000-4000-8000-000000000007',
   },
 };
 
@@ -138,30 +141,37 @@ async function upsertUser(
   return user.id;
 }
 
+function getAdminCredentials() {
+  const email = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+  const password = process.env.ADMIN_PASSWORD;
+  if (!email || !password) {
+    return null;
+  }
+  return { email, password };
+}
+
 export async function runDatabaseSeed(prisma: PrismaClient) {
   const demoHash = await bcrypt.hash(SEED_PASSWORD_DEMO, 10);
-  const adminHash = await bcrypt.hash(SEED_PASSWORD_ADMIN, 10);
 
   const u = SEED_IDS.users;
   const userIds: Record<string, string> = {};
 
-  userIds.admin = await upsertUser(prisma, u.admin, {
-    email: 'admin@jobmatch.ai',
-    passwordHash: adminHash,
-    role: UserRole.ADMIN,
-    fullName: 'System Admin',
-    approved: true,
-    emailVerified: true,
-  });
-
-  userIds.adminGmail = await upsertUser(prisma, u.adminGmail, {
-    email: 'admin@gmail.com',
-    passwordHash: demoHash,
-    role: UserRole.ADMIN,
-    fullName: 'System Admin',
-    approved: true,
-    emailVerified: true,
-  });
+  const adminCredentials = getAdminCredentials();
+  if (adminCredentials) {
+    const adminHash = await bcrypt.hash(adminCredentials.password, 10);
+    userIds.admin = await upsertUser(prisma, u.admin, {
+      email: adminCredentials.email,
+      passwordHash: adminHash,
+      role: UserRole.ADMIN,
+      fullName: 'System Admin',
+      approved: true,
+      emailVerified: true,
+    });
+  } else {
+    console.warn(
+      'Admin seed skipped: set ADMIN_EMAIL and ADMIN_PASSWORD to create the admin account.',
+    );
+  }
 
   const seekers: Array<{
     key: string;
@@ -859,11 +869,19 @@ export async function runDatabaseSeed(prisma: PrismaClient) {
     { userId: userIds.employerRiver, title: 'Account pending', message: 'Your employer account is awaiting admin approval.', type: NotificationType.WARNING, read: false },
     { userId: userIds.mariama, title: 'Interview reminder', message: 'Junior Accountant interview tomorrow at 10:00.', type: NotificationType.APPLICATION, read: false },
     { userId: userIds.aisha, title: 'Congratulations!', message: 'You were hired for Community Health Nurse.', type: NotificationType.SUCCESS, read: false },
-    { userId: userIds.admin, title: 'Jobs pending review', message: '3 job postings await moderation.', type: NotificationType.SYSTEM, read: false },
+    ...(userIds.admin
+      ? [{ userId: userIds.admin, title: 'Jobs pending review', message: '3 job postings await moderation.', type: NotificationType.SYSTEM, read: false }]
+      : []),
     { userId: userIds.omar, title: 'Application update', message: 'Your Sales Representative application moved to interview.', type: NotificationType.APPLICATION, read: true },
     { userId: userIds.haddy, title: 'Skills gap insight', message: 'Complete Figma UI Design to improve UX Designer matches.', type: NotificationType.INFO, read: false },
     { userId: userIds.samba, title: 'New job match', message: 'Delivery Driver is a 96% match for your profile.', type: NotificationType.JOB, read: false },
     { userId: userIds.kaddy, title: 'Training path', message: 'Teaching Methods course recommended for Vocational Trainer.', type: NotificationType.INFO, read: true },
+    { userId: userIds.modou, title: 'Interview invite', message: 'Kotu Digital wants to interview you for Backend Developer.', type: NotificationType.APPLICATION, read: false },
+    { userId: userIds.laminSeeker, title: 'Application shortlisted', message: 'Your Data Analyst application was shortlisted.', type: NotificationType.APPLICATION, read: false },
+    { userId: userIds.ibrahim, title: 'Skills match', message: 'Electrician role at West Coast Agro is a 93% match.', type: NotificationType.JOB, read: false },
+    { userId: userIds.employerKotu, title: 'New applicant', message: 'Modou Sarr applied for Backend Developer (82% match).', type: NotificationType.APPLICATION, read: false },
+    { userId: userIds.employerFinance, title: 'Interview scheduled', message: 'Mariama Sowe confirmed Junior Accountant interview.', type: NotificationType.APPLICATION, read: true },
+    { userId: userIds.binta, title: 'Career insight', message: 'Your profile aligns well with IT Project Manager roles.', type: NotificationType.INFO, read: false },
   ];
 
   for (const [index, notif] of notifications.entries()) {
@@ -877,44 +895,23 @@ export async function runDatabaseSeed(prisma: PrismaClient) {
 
   const t = SEED_IDS.threads;
 
-  await prisma.chatThread.upsert({
-    where: { id: t.bahFrontend },
-    update: { lastMessageAt: daysAgo(1) },
-    create: {
-      id: t.bahFrontend,
-      employerId: userIds.employerAtlantic,
-      applicantId: userIds.bah,
-      jobId: j.frontend,
-      status: ChatThreadStatus.OPEN,
-      lastMessageAt: daysAgo(1),
-    },
-  });
+  const threadDefs = [
+    { id: t.bahFrontend, employerId: userIds.employerAtlantic, applicantId: userIds.bah, jobId: j.frontend, status: ChatThreadStatus.OPEN, lastMessageAt: daysAgo(1) },
+    { id: t.fatouFrontend, employerId: userIds.employerAtlantic, applicantId: userIds.fatou, jobId: j.frontend, status: ChatThreadStatus.OPEN, lastMessageAt: daysAgo(2) },
+    { id: t.bahData, employerId: userIds.employerAtlantic, applicantId: userIds.bah, jobId: j.dataAnalyst, status: ChatThreadStatus.CLOSED, lastMessageAt: daysAgo(5) },
+    { id: t.modouBackend, employerId: userIds.employerKotu, applicantId: userIds.modou, jobId: j.backendDev, status: ChatThreadStatus.OPEN, lastMessageAt: daysAgo(1) },
+    { id: t.omarSales, employerId: userIds.employerRetail, applicantId: userIds.omar, jobId: j.salesRep, status: ChatThreadStatus.OPEN, lastMessageAt: daysAgo(3) },
+    { id: t.mariamaAccountant, employerId: userIds.employerFinance, applicantId: userIds.mariama, jobId: j.accountant, status: ChatThreadStatus.OPEN, lastMessageAt: daysAgo(2) },
+    { id: t.fatouMobile, employerId: userIds.employerKotu, applicantId: userIds.fatou, jobId: j.mobileDev, status: ChatThreadStatus.OPEN, lastMessageAt: daysAgo(4) },
+  ];
 
-  await prisma.chatThread.upsert({
-    where: { id: t.fatouFrontend },
-    update: { lastMessageAt: daysAgo(2) },
-    create: {
-      id: t.fatouFrontend,
-      employerId: userIds.employerAtlantic,
-      applicantId: userIds.fatou,
-      jobId: j.frontend,
-      status: ChatThreadStatus.OPEN,
-      lastMessageAt: daysAgo(2),
-    },
-  });
-
-  await prisma.chatThread.upsert({
-    where: { id: t.bahData },
-    update: { lastMessageAt: daysAgo(5) },
-    create: {
-      id: t.bahData,
-      employerId: userIds.employerAtlantic,
-      applicantId: userIds.bah,
-      jobId: j.dataAnalyst,
-      status: ChatThreadStatus.CLOSED,
-      lastMessageAt: daysAgo(5),
-    },
-  });
+  for (const thread of threadDefs) {
+    await prisma.chatThread.upsert({
+      where: { id: thread.id },
+      update: { lastMessageAt: thread.lastMessageAt, status: thread.status },
+      create: thread,
+    });
+  }
 
   const messages = [
     { id: 'f0000000-0000-4000-8000-000000000001', threadId: t.bahFrontend, senderId: userIds.employerAtlantic, content: 'Hi Bah, thanks for applying. Can you share your React experience?', createdAt: daysAgo(2) },
@@ -924,6 +921,15 @@ export async function runDatabaseSeed(prisma: PrismaClient) {
     { id: 'f0000000-0000-4000-8000-000000000005', threadId: t.fatouFrontend, senderId: userIds.fatou, content: 'Yes, I am available Thursday or Friday morning.', createdAt: daysAgo(2) },
     { id: 'f0000000-0000-4000-8000-000000000006', threadId: t.bahData, senderId: userIds.employerAtlantic, content: 'We are reviewing your data analyst application.', createdAt: daysAgo(6) },
     { id: 'f0000000-0000-4000-8000-000000000007', threadId: t.bahData, senderId: userIds.bah, content: 'Thank you — happy to complete a skills assessment if needed.', createdAt: daysAgo(5) },
+    { id: 'f0000000-0000-4000-8000-000000000008', threadId: t.modouBackend, senderId: userIds.employerKotu, content: 'Modou, we liked your Java background. Can you walk us through a recent API project?', createdAt: daysAgo(2) },
+    { id: 'f0000000-0000-4000-8000-000000000009', threadId: t.modouBackend, senderId: userIds.modou, content: 'Sure — I built a REST API with Spring Boot and PostgreSQL for an inventory system.', createdAt: daysAgo(1) },
+    { id: 'f0000000-0000-4000-8000-00000000000a', threadId: t.modouBackend, senderId: userIds.employerKotu, content: 'Perfect. Let us schedule a technical interview for next Tuesday.', createdAt: daysAgo(1) },
+    { id: 'f0000000-0000-4000-8000-00000000000b', threadId: t.omarSales, senderId: userIds.employerRetail, content: 'Omar, your sales experience stands out. Are you comfortable with field visits in Serrekunda?', createdAt: daysAgo(4) },
+    { id: 'f0000000-0000-4000-8000-00000000000c', threadId: t.omarSales, senderId: userIds.omar, content: 'Absolutely — I have covered Greater Banjul routes for 3 years.', createdAt: daysAgo(3) },
+    { id: 'f0000000-0000-4000-8000-00000000000d', threadId: t.mariamaAccountant, senderId: userIds.employerFinance, content: 'Mariama, please bring your QuickBooks certification to the interview.', createdAt: daysAgo(3) },
+    { id: 'f0000000-0000-4000-8000-00000000000e', threadId: t.mariamaAccountant, senderId: userIds.mariama, content: 'Will do. I also have Excel modelling samples to share.', createdAt: daysAgo(2) },
+    { id: 'f0000000-0000-4000-8000-00000000000f', threadId: t.fatouMobile, senderId: userIds.employerKotu, content: 'Fatou, your React skills are a great fit for our mobile team too.', createdAt: daysAgo(5) },
+    { id: 'f0000000-0000-4000-8000-000000000010', threadId: t.fatouMobile, senderId: userIds.fatou, content: 'I have been learning React Native — happy to discuss my side projects.', createdAt: daysAgo(4) },
   ];
 
   for (const msg of messages) {
@@ -934,14 +940,56 @@ export async function runDatabaseSeed(prisma: PrismaClient) {
     });
   }
 
-  const auditLogs = [
-    { id: 'g0000000-0000-4000-8000-000000000001', actorId: userIds.admin, action: 'JOB_MODERATED', entityType: 'job', entityId: j.frontend, metadata: { decision: 'approved' } },
-    { id: 'g0000000-0000-4000-8000-000000000002', actorId: userIds.admin, action: 'USER_APPROVED', entityType: 'user', entityId: userIds.employerAtlantic, metadata: { company: 'Atlantic Tech' } },
-    { id: 'g0000000-0000-4000-8000-000000000003', actorId: userIds.admin, action: 'JOB_MODERATED', entityType: 'job', entityId: j.warehouse, metadata: { decision: 'pending' } },
-    { id: 'g0000000-0000-4000-8000-000000000004', actorId: userIds.adminGmail, action: 'SETTINGS_UPDATED', entityType: 'platform', metadata: { aiEnabled: true } },
-    { id: 'g0000000-0000-4000-8000-000000000005', actorId: userIds.admin, action: 'JOB_MODERATED', entityType: 'job', entityId: j.logistics, metadata: { decision: 'rejected' } },
-    { id: 'g0000000-0000-4000-8000-000000000006', actorId: userIds.admin, action: 'USER_BLOCKED', entityType: 'user', entityId: userIds.yusupha, metadata: { blocked: false, note: 'review cleared' } },
+  const messageReads = [
+    { id: 'f1000000-0000-4000-8000-000000000001', messageId: 'f0000000-0000-4000-8000-000000000001', userId: userIds.bah, readAt: daysAgo(2) },
+    { id: 'f1000000-0000-4000-8000-000000000002', messageId: 'f0000000-0000-4000-8000-000000000003', userId: userIds.bah, readAt: daysAgo(1) },
+    { id: 'f1000000-0000-4000-8000-000000000003', messageId: 'f0000000-0000-4000-8000-000000000004', userId: userIds.fatou, readAt: daysAgo(3) },
+    { id: 'f1000000-0000-4000-8000-000000000004', messageId: 'f0000000-0000-4000-8000-000000000008', userId: userIds.modou, readAt: daysAgo(2) },
+    { id: 'f1000000-0000-4000-8000-000000000005', messageId: 'f0000000-0000-4000-8000-00000000000a', userId: userIds.employerKotu, readAt: daysAgo(1) },
   ];
+
+  for (const read of messageReads) {
+    await prisma.chatMessageRead.upsert({
+      where: { messageId_userId: { messageId: read.messageId, userId: read.userId } },
+      update: { readAt: read.readAt },
+      create: read,
+    });
+  }
+
+  const coachMessages = [
+    { id: 'h0000000-0000-4000-8000-000000000001', userId: userIds.bah, role: CoachMessageRole.USER, content: 'I want to become a frontend developer in Banjul. What should I focus on?', createdAt: daysAgo(7) },
+    { id: 'h0000000-0000-4000-8000-000000000002', userId: userIds.bah, role: CoachMessageRole.ASSISTANT, content: 'Based on your skills (JavaScript, HTML), prioritize React and TypeScript. Atlantic Tech and Kotu Digital often hire juniors — tailor your CV to those stacks and apply to their published frontend roles.', createdAt: daysAgo(7) },
+    { id: 'h0000000-0000-4000-8000-000000000003', userId: userIds.bah, role: CoachMessageRole.USER, content: 'Should I take any training courses first?', createdAt: daysAgo(6) },
+    { id: 'h0000000-0000-4000-8000-000000000004', userId: userIds.bah, role: CoachMessageRole.ASSISTANT, content: 'Yes — React for Beginners and TypeScript Fundamentals will close your biggest gaps. SQL Basics is optional but useful if you target data-adjacent roles too.', createdAt: daysAgo(6) },
+    { id: 'h0000000-0000-4000-8000-000000000005', userId: userIds.fatou, role: CoachMessageRole.USER, content: 'I have 3 years of React experience. How can I stand out for senior roles?', createdAt: daysAgo(5) },
+    { id: 'h0000000-0000-4000-8000-000000000006', userId: userIds.fatou, role: CoachMessageRole.ASSISTANT, content: 'Highlight measurable impact on past projects, contribute to open source, and consider React Native — Kotu Digital has a mobile developer opening that matches your profile well.', createdAt: daysAgo(5) },
+    { id: 'h0000000-0000-4000-8000-000000000007', userId: userIds.laminSeeker, role: CoachMessageRole.USER, content: 'I am interested in data analyst jobs but only have 1 year of experience.', createdAt: daysAgo(4) },
+    { id: 'h0000000-0000-4000-8000-000000000008', userId: userIds.laminSeeker, role: CoachMessageRole.ASSISTANT, content: 'Your Python and SQL skills are a solid foundation. Complete Python for Data Analysis, build a small portfolio project with Gambian labour-market data, and apply to the Data Analyst role at Atlantic Tech — you are already shortlisted.', createdAt: daysAgo(4) },
+    { id: 'h0000000-0000-4000-8000-000000000009', userId: userIds.mariama, role: CoachMessageRole.USER, content: 'What salary range should I expect for accountant roles in Banjul?', createdAt: daysAgo(3) },
+    { id: 'h0000000-0000-4000-8000-00000000000a', userId: userIds.mariama, role: CoachMessageRole.ASSISTANT, content: 'Junior accountant roles at Banjul Finance Group list GMD 22,000–32,000. With 4 years of experience and QuickBooks skills, you are well positioned — prepare for behavioural and technical questions.', createdAt: daysAgo(3) },
+  ];
+
+  for (const coach of coachMessages) {
+    await prisma.coachMessage.upsert({
+      where: { id: coach.id },
+      update: { content: coach.content, role: coach.role },
+      create: coach,
+    });
+  }
+
+  const auditLogs = userIds.admin
+    ? [
+        { id: 'g0000000-0000-4000-8000-000000000001', actorId: userIds.admin, action: 'JOB_MODERATED', entityType: 'job', entityId: j.frontend, metadata: { decision: 'approved' } },
+        { id: 'g0000000-0000-4000-8000-000000000002', actorId: userIds.admin, action: 'USER_APPROVED', entityType: 'user', entityId: userIds.employerAtlantic, metadata: { company: 'Atlantic Tech' } },
+        { id: 'g0000000-0000-4000-8000-000000000003', actorId: userIds.admin, action: 'JOB_MODERATED', entityType: 'job', entityId: j.warehouse, metadata: { decision: 'pending' } },
+        { id: 'g0000000-0000-4000-8000-000000000004', actorId: userIds.admin, action: 'SETTINGS_UPDATED', entityType: 'platform', metadata: { aiEnabled: true } },
+        { id: 'g0000000-0000-4000-8000-000000000005', actorId: userIds.admin, action: 'JOB_MODERATED', entityType: 'job', entityId: j.logistics, metadata: { decision: 'rejected' } },
+        { id: 'g0000000-0000-4000-8000-000000000006', actorId: userIds.admin, action: 'USER_BLOCKED', entityType: 'user', entityId: userIds.yusupha, metadata: { blocked: false, note: 'review cleared' } },
+        { id: 'g0000000-0000-4000-8000-000000000007', actorId: userIds.admin, action: 'JOB_MODERATED', entityType: 'job', entityId: j.callCenter, metadata: { decision: 'pending' } },
+        { id: 'g0000000-0000-4000-8000-000000000008', actorId: userIds.admin, action: 'USER_APPROVED', entityType: 'user', entityId: userIds.employerKotu, metadata: { company: 'Kotu Digital' } },
+        { id: 'g0000000-0000-4000-8000-000000000009', actorId: userIds.admin, action: 'APPLICATION_REVIEWED', entityType: 'application', entityId: j.nurse, metadata: { status: 'hired', applicant: 'aisha@gmail.com' } },
+      ]
+    : [];
 
   for (const [index, log] of auditLogs.entries()) {
     await prisma.auditLog.upsert({
@@ -983,6 +1031,8 @@ export async function runDatabaseSeed(prisma: PrismaClient) {
     prisma.notification.count(),
     prisma.chatThread.count(),
     prisma.chatMessage.count(),
+    prisma.coachMessage.count(),
+    prisma.auditLog.count(),
   ]);
 
   return {
@@ -993,6 +1043,8 @@ export async function runDatabaseSeed(prisma: PrismaClient) {
     notifications: counts[4],
     chatThreads: counts[5],
     chatMessages: counts[6],
+    coachMessages: counts[7],
+    auditLogs: counts[8],
     locations: GAMBIAN_LOCATIONS.length,
   };
 }

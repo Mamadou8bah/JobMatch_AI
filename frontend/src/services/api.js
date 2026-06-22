@@ -4,6 +4,11 @@ const API_BASE =
   import.meta.env.VITE_API_URL ||
   (import.meta.env.DEV ? "/api" : PRODUCTION_API_BASE);
 
+/** Fire-and-forget ping to wake a sleeping backend before the user needs data. */
+export function wakeBackend() {
+  return fetch(`${API_BASE}/health`, { method: "GET" }).catch(() => {});
+}
+
 class ApiError extends Error {
   constructor(message, status, data) {
     super(message);

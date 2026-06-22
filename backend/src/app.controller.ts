@@ -10,4 +10,14 @@ export class AppController {
       timestamp: new Date().toISOString(),
     };
   }
+
+  /** Lightweight ping for cold-start wake-up (e.g. Render free tier). */
+  @Get('health')
+  health() {
+    return {
+      status: 'ok',
+      service: 'jobmatch-api',
+      timestamp: new Date().toISOString(),
+    };
+  }
 }

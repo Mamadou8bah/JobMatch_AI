@@ -5,3 +5,5 @@ coverage
 .env.*
 .idea
 .vscode
+prisma/seed-data.js
+prisma/seed-data.d.ts

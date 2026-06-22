@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import heroAsset from "../assets/hero.png";
 import BrandLogo from "../components/BrandLogo.jsx";
@@ -6,6 +7,8 @@ import Button from "../components/ui/Button.jsx";
 import LandingNav from "../components/landing/LandingNav.jsx";
 import ProfileMetricsBento from "../components/landing/ProfileMetricsBento.jsx";
 import EcosystemMarquee from "../components/landing/EcosystemMarquee.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
+import { wakeBackend } from "../services/api.js";
 import { cn } from "../lib/cn.js";
 
 const categories = [
@@ -108,6 +111,14 @@ function SectionHeading({ eyebrow, title, description, className, dark = false }
 }
 
 export default function Landing() {
+  const { user } = useAuth();
+  const authPath = user ? "/portal" : "/login";
+  const authLabel = user ? "Portal" : "Sign In";
+
+  useEffect(() => {
+    wakeBackend();
+  }, []);
+
   return (
     <main className="w-full overflow-x-hidden bg-white text-brand-dark antialiased">
       {/* Hero */}
@@ -452,7 +463,9 @@ export default function Landing() {
               <Link to="/seeker" className="text-white/60 transition hover:text-brand-lime">Job Seekers</Link>
               <Link to="/employer" className="text-white/60 transition hover:text-brand-lime">Employers</Link>
               <Link to="/admin" className="text-white/60 transition hover:text-brand-lime">Administrators</Link>
-              <Link to="/login" className="text-white/60 transition hover:text-brand-lime">Sign In</Link>
+              <Link to={authPath} className="text-white/60 transition hover:text-brand-lime">
+                {authLabel}
+              </Link>
             </div>
           </div>
         </div>
