@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../services/api.js";
 import { useAuth } from "../../context/AuthContext.jsx";
+import PremiumGate from "../../components/dashboard/PremiumGate.jsx";
 
 const EMPLOYMENT_TYPES = ["Full-time", "Part-time", "Contract", "Internship", "Remote"];
 const EXPERIENCE_LEVELS = ["Entry", "Mid", "Senior", "Lead", "Executive"];
@@ -23,6 +24,7 @@ export default function EmployerPostJob() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [premiumBlocked, setPremiumBlocked] = useState(false);
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -50,6 +52,7 @@ export default function EmployerPostJob() {
       setSuccess("Job posted successfully!");
       setTimeout(() => navigate("/employer/jobs"), 1500);
     } catch (err) {
+      if (err.isPremiumRequired) setPremiumBlocked(true);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -70,7 +73,13 @@ export default function EmployerPostJob() {
   return (
     <>
       <h1 className="dash-page-title">Post a Job</h1>
-      {error && <div className="dash-alert error">{error}</div>}
+      {premiumBlocked ? (
+        <PremiumGate
+          title="Job posting limit reached"
+          message="Free employers can keep 2 active jobs. Upgrade to Premium for unlimited listings and priority placement."
+        />
+      ) : null}
+      {error && !premiumBlocked ? <div className="dash-alert error">{error}</div> : null}
       {success && <div className="dash-alert success">{success}</div>}
 
       <div className="dash-card" style={{ maxWidth: 720 }}>

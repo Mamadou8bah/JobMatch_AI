@@ -2,18 +2,23 @@ import { useEffect, useState } from "react";
 import { api } from "../../services/api.js";
 import StatCard from "../../components/dashboard/StatCard.jsx";
 import StatusBadge from "../../components/dashboard/StatusBadge.jsx";
+import PremiumGate from "../../components/dashboard/PremiumGate.jsx";
 import { formatDate, formatNumber } from "../../components/dashboard/icons.jsx";
 
 export default function EmployerAnalytics() {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [premiumBlocked, setPremiumBlocked] = useState(false);
 
   useEffect(() => {
     api.employer
       .analytics()
       .then(setAnalytics)
-      .catch((err) => setError(err.message))
+      .catch((err) => {
+        if (err.isPremiumRequired) setPremiumBlocked(true);
+        setError(err.message);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -22,6 +27,18 @@ export default function EmployerAnalytics() {
       <div className="dash-loading" style={{ minHeight: 400 }}>
         <div className="dash-spinner" />
       </div>
+    );
+  }
+
+  if (premiumBlocked) {
+    return (
+      <>
+        <h1 className="dash-page-title">Hiring Analytics</h1>
+        <PremiumGate
+          title="Analytics is Premium"
+          message="Upgrade to Employer Premium for funnel insights, match averages, and hiring performance across your jobs."
+        />
+      </>
     );
   }
 

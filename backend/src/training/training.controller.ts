@@ -27,6 +27,50 @@ export class TrainingController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.TrainingProvider, UserRole.Admin)
+  @Get('mine')
+  listMine(@Req() request: Request & { user: { sub: string; role: UserRole } }) {
+    if (request.user.role === UserRole.Admin) {
+      return this.trainingService.listCourses(undefined, true);
+    }
+    return this.trainingService.listOwnedCourses(request.user.sub);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.TrainingProvider, UserRole.Admin)
+  @Post('mine')
+  createMine(
+    @Req() request: Request & { user: { sub: string; role: UserRole } },
+    @Body() dto: CreateTrainingCourseDto,
+  ) {
+    if (request.user.role === UserRole.Admin) {
+      return this.trainingService.createCourse(dto, request.user.sub, Boolean(dto.featured));
+    }
+    return this.trainingService.createProviderCourse(request.user.sub, request.user.role, dto);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.TrainingProvider, UserRole.Admin)
+  @Patch('mine/:id')
+  updateMine(
+    @Req() request: Request & { user: { sub: string; role: UserRole } },
+    @Param('id') id: string,
+    @Body() dto: UpdateTrainingCourseDto,
+  ) {
+    return this.trainingService.updateOwnedCourse(id, request.user.sub, request.user.role, dto);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.TrainingProvider, UserRole.Admin)
+  @Delete('mine/:id')
+  deleteMine(
+    @Req() request: Request & { user: { sub: string; role: UserRole } },
+    @Param('id') id: string,
+  ) {
+    return this.trainingService.deleteOwnedCourse(id, request.user.sub, request.user.role);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.Admin)
   @Get('admin')
   listForAdmin(@Query('skill') skill?: string) {

@@ -1,5 +1,7 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { MatchResult } from '../common/types/job-match.type';
+import { BILLING_FEATURES } from '../billing/billing.constants';
+import { EntitlementsService } from '../billing/entitlements.service';
 import { DatabaseService } from '../database/database.service';
 import { JobsService } from '../jobs/jobs.service';
 import { buildLearningRoadmapFallback, CareerCoachProfile } from './career-coach.fallback';
@@ -30,6 +32,7 @@ export class AiConnectionService {
     private readonly store: DatabaseService,
     private readonly jobsService: JobsService,
     private readonly aiEngineClient: AiEngineClient,
+    private readonly entitlements: EntitlementsService,
   ) {}
 
   parseResume(input: { text?: string; skills?: string[]; education?: string[]; experience?: string[] }) {
@@ -75,8 +78,10 @@ export class AiConnectionService {
     return this.aiEngineClient.skillsGap(candidateSkills, requiredSkills);
   }
 
-  recommendTraining(missingSkills: string[] = []) {
-    return this.aiEngineClient.recommendTraining(missingSkills);
+  recommendTraining(missingSkills: string[] = [], userId?: string) {
+    return this.withPremiumGate(userId, BILLING_FEATURES.TRAINING_RECS, () =>
+      this.aiEngineClient.recommendTraining(missingSkills),
+    );
   }
 
   async chat(input: { message: string; userId?: string; conversationHistory?: Array<{ role: string; content: string }> }) {
@@ -85,6 +90,8 @@ export class AiConnectionService {
       if (!userId) {
         throw new ServiceUnavailableException('User context is required for career chat');
       }
+
+      await this.entitlements.assertCanUseCoach(userId);
 
       const trimmedMessage = input.message.trim();
       const priorMessages = await this.store.coachMessage.findMany({
@@ -122,6 +129,8 @@ export class AiConnectionService {
         },
       });
 
+      await this.entitlements.consumeCoachMessage(userId);
+
       return {
         ...aiResult,
         userMessage: this.formatCoachMessage(userRecord),
@@ -155,6 +164,13 @@ export class AiConnectionService {
   }
 
   async learningRoadmap(input: { goal: string; currentSkills?: string[]; userId?: string }) {
+    if (input.userId) {
+      await this.entitlements.assertPremium(
+        input.userId,
+        BILLING_FEATURES.LEARNING_ROADMAP,
+        'Personalized learning roadmaps are a Premium feature.',
+      );
+    }
     return this.withFeatureCheck('careerChatEnabled', async () => {
       const userProfile = await this.buildUserProfile(input.userId);
       const currentSkills = input.currentSkills ?? userProfile?.skills ?? [];
@@ -173,6 +189,13 @@ export class AiConnectionService {
     });
   }
 
+  private async withPremiumGate<T>(userId: string | undefined, feature: string, action: () => Promise<T> | T) {
+    if (userId) {
+      await this.entitlements.assertPremium(userId, feature as any);
+    }
+    return action();
+  }
+
   private async withFeatureCheck<T>(
     flag: 'aiEnabled' | 'careerChatEnabled' | 'resumeParsingEnabled',
     action: () => Promise<T> | T,
@@ -186,7 +209,7 @@ export class AiConnectionService {
 
   async getCandidateMatch(userId: string, jobId: string) {
     const user = await this.store.user.findUnique({ where: { id: userId } });
-    return this.matchScore(
+    const match = await this.matchScore(
       {
         id: user?.id,
         skills: user?.skills ?? [],
@@ -194,6 +217,8 @@ export class AiConnectionService {
       },
       jobId,
     );
+    const redacted = await this.entitlements.redactMatchForPlan(userId, match);
+    return { jobId, ...redacted };
   }
 
   private async buildUserProfile(userId?: string): Promise<CareerCoachProfile | undefined> {

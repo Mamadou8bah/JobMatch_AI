@@ -74,9 +74,23 @@ export function AuthProvider({ children }) {
     return me;
   };
 
+  const isPremium =
+    user?.role === "admin" ||
+    ((user?.plan === "premium" || user?.plan === "PREMIUM") &&
+      (!user?.planExpiresAt || new Date(user.planExpiresAt).getTime() > Date.now()));
+
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, register, logout, refreshUser, isAuthenticated: !!user }}
+      value={{
+        user,
+        loading,
+        login,
+        register,
+        logout,
+        refreshUser,
+        isAuthenticated: !!user,
+        isPremium,
+      }}
     >
       {children}
     </AuthContext.Provider>

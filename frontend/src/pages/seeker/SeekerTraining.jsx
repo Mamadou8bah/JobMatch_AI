@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { api } from "../../services/api.js";
 import { useAuth } from "../../context/AuthContext.jsx";
+import PremiumGate from "../../components/dashboard/PremiumGate.jsx";
 
 export default function SeekerTraining() {
-  const { user } = useAuth();
+  const { user, isPremium } = useAuth();
   const [recommendations, setRecommendations] = useState([]);
   const [courses, setCourses] = useState([]);
   const [roadmap, setRoadmap] = useState(null);
@@ -11,6 +12,7 @@ export default function SeekerTraining() {
   const [loading, setLoading] = useState(true);
   const [roadmapLoading, setRoadmapLoading] = useState(false);
   const [error, setError] = useState("");
+  const [premiumBlocked, setPremiumBlocked] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -18,15 +20,19 @@ export default function SeekerTraining() {
         const allCourses = await api.training.list();
         setCourses(allCourses);
 
-        if (user?.skills?.length) {
+        if (user?.skills?.length && isPremium) {
           const topJobs = await api.jobs.list({ status: "published" });
           const bestJob = [...topJobs].sort((a, b) => (b.match?.score || 0) - (a.match?.score || 0))[0];
           let recs = [];
 
           if (bestJob?.id) {
-            const personalized = await api.training.personalized(bestJob.id);
-            if (personalized.recommendations?.length) {
-              recs = personalized.recommendations;
+            try {
+              const personalized = await api.training.personalized(bestJob.id);
+              if (personalized.recommendations?.length) {
+                recs = personalized.recommendations;
+              }
+            } catch {
+              /* premium or AI unavailable */
             }
           }
 
@@ -36,8 +42,12 @@ export default function SeekerTraining() {
             ];
             const gapResult = await api.ai.skillsGap(user.skills, requiredSkills);
             if (gapResult.missingSkills?.length) {
-              const gapRecs = await api.ai.trainingRecommendations(gapResult.missingSkills);
-              recs = gapRecs.recommendations || [];
+              try {
+                const gapRecs = await api.ai.trainingRecommendations(gapResult.missingSkills);
+                recs = gapRecs.recommendations || [];
+              } catch {
+                /* premium gated */
+              }
             }
           }
 
@@ -50,16 +60,18 @@ export default function SeekerTraining() {
       }
     }
     load();
-  }, [user?.skills]);
+  }, [user?.skills, isPremium]);
 
   const generateRoadmap = async (e) => {
     e.preventDefault();
     setRoadmapLoading(true);
     setError("");
+    setPremiumBlocked(false);
     try {
       const data = await api.ai.learningRoadmap(goal, user?.skills || []);
       setRoadmap(data.roadmap || data);
     } catch (err) {
+      if (err.isPremiumRequired) setPremiumBlocked(true);
       setError(err.message);
     } finally {
       setRoadmapLoading(false);
@@ -77,7 +89,19 @@ export default function SeekerTraining() {
   return (
     <>
       <h1 className="dash-page-title">Training Recommendations</h1>
-      {error && <div className="dash-alert error">{error}</div>}
+      {!isPremium ? (
+        <PremiumGate
+          title="Personalized training is Premium"
+          message="Browse the course catalog below for free. Upgrade to unlock AI recommendations and learning roadmaps based on your skill gaps."
+        />
+      ) : null}
+      {premiumBlocked ? (
+        <PremiumGate
+          title="Learning roadmap locked"
+          message="Personalized career roadmaps are included with Seeker Premium."
+        />
+      ) : null}
+      {error && !premiumBlocked ? <div className="dash-alert error">{error}</div> : null}
 
       <div className="dash-card" style={{ marginBottom: 20 }}>
         <h3 className="dash-card-title">AI Learning Roadmap</h3>

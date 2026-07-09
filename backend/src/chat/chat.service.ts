@@ -142,10 +142,17 @@ export class ChatService {
 
   private threadInclude() {
     return {
-      employer: { select: { id: true, fullName: true, companyName: true, role: true } },
-      applicant: { select: { id: true, fullName: true, role: true } },
+      employer: { select: { id: true, fullName: true, companyName: true, role: true, avatarUrl: true } },
+      applicant: { select: { id: true, fullName: true, role: true, avatarUrl: true } },
       job: { select: { id: true, title: true } },
-      messages: { orderBy: { createdAt: 'desc' as const }, take: 1 },
+      messages: {
+        orderBy: { createdAt: 'desc' as const },
+        take: 1,
+        include: {
+          sender: { select: { id: true, fullName: true, role: true } },
+          reads: { select: { userId: true } },
+        },
+      },
     };
   }
 }

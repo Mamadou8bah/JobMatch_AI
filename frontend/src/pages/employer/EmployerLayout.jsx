@@ -8,6 +8,7 @@ const employerNav = [
   { to: "/employer/candidates", label: "Candidates", icon: ICONS.candidates },
   { to: "/employer/ranking", label: "AI Ranking", icon: ICONS.ranking },
   { to: "/employer/analytics", label: "Analytics", icon: ICONS.analytics },
+  { to: "/employer/billing", label: "Premium", icon: ICONS.ranking },
   { to: "/employer/profile", label: "Company", icon: ICONS.companies },
   { to: "/employer/messages", label: "Messages", icon: ICONS.messages },
 ];

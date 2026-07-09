@@ -14,3 +14,19 @@ services:
         sync: false
       - key: ADMIN_PASSWORD
         sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: MODEMPAY_SECRET_KEY
+        sync: false
+      - key: MODEMPAY_CALLBACK_URL
+        sync: false
+      - key: API_PUBLIC_URL
+        sync: false
+      - key: MODEMPAY_WEBHOOK_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        sync: false

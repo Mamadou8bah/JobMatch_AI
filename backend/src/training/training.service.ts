@@ -1,5 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { TrainingCourseStatus } from '@prisma/client';
+import { BILLING_FEATURES } from '../billing/billing.constants';
+import { EntitlementsService } from '../billing/entitlements.service';
 import { DatabaseService } from '../database/database.service';
 import { JobsService } from '../jobs/jobs.service';
 import { AiConnectionService } from '../ai-connection/ai-connection.service';
@@ -12,6 +14,7 @@ export class TrainingService {
     private readonly database: DatabaseService,
     private readonly jobsService: JobsService,
     private readonly aiConnectionService: AiConnectionService,
+    private readonly entitlements: EntitlementsService,
   ) {}
 
   listCourses(skill?: string, includeInactive = false) {
@@ -20,20 +23,77 @@ export class TrainingService {
         ...(includeInactive ? {} : { status: TrainingCourseStatus.ACTIVE }),
         ...(skill ? { skills: { has: skill } } : {}),
       },
+      orderBy: [{ featured: 'desc' }, { createdAt: 'desc' }],
+    });
+  }
+
+  listOwnedCourses(ownerId: string) {
+    return this.database.trainingCourse.findMany({
+      where: { ownerId },
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  createCourse(dto: CreateTrainingCourseDto) {
+  createCourse(dto: CreateTrainingCourseDto, ownerId?: string, featured = false) {
     return this.database.trainingCourse.create({
+      data: {
+        title: dto.title,
+        provider: dto.provider || 'JobMatch Academy',
+        description: dto.description,
+        url: dto.url,
+        skills: dto.skills,
+        ownerId: ownerId || null,
+        featured,
+      },
+    });
+  }
+
+  async createProviderCourse(ownerId: string, role: string, dto: CreateTrainingCourseDto) {
+    await this.entitlements.assertCanCreateCourse(ownerId, role);
+    const premium = await this.entitlements.isPremium(ownerId);
+    const owner = await this.database.user.findUnique({ where: { id: ownerId } });
+    if (!owner) throw new NotFoundException('Provider not found');
+    if (role === 'training_provider' && !owner.approved) {
+      throw new ForbiddenException('Your training provider account must be approved before listing courses');
+    }
+
+    return this.createCourse(
+      {
+        ...dto,
+        provider: dto.provider || owner.companyName || owner.fullName,
+      },
+      ownerId,
+      Boolean(premium && dto.featured),
+    );
+  }
+
+  async updateOwnedCourse(courseId: string, ownerId: string, role: string, dto: UpdateTrainingCourseDto) {
+    const course = await this.ensureCourseExists(courseId);
+    if (role !== 'admin' && course.ownerId !== ownerId) {
+      throw new ForbiddenException('You can only manage your own courses');
+    }
+    const premium = role === 'admin' ? true : await this.entitlements.isPremium(ownerId);
+    return this.database.trainingCourse.update({
+      where: { id: courseId },
       data: {
         title: dto.title,
         provider: dto.provider,
         description: dto.description,
         url: dto.url,
         skills: dto.skills,
+        status: dto.status ? this.toCourseStatus(dto.status) : undefined,
+        featured: premium ? (dto.featured ?? course.featured) : false,
       },
     });
+  }
+
+  async deleteOwnedCourse(courseId: string, ownerId: string, role: string) {
+    const course = await this.ensureCourseExists(courseId);
+    if (role !== 'admin' && course.ownerId !== ownerId) {
+      throw new ForbiddenException('You can only manage your own courses');
+    }
+    await this.database.trainingCourse.delete({ where: { id: courseId } });
+    return { message: 'Training course deleted successfully' };
   }
 
   async updateCourse(courseId: string, dto: UpdateTrainingCourseDto) {
@@ -48,6 +108,7 @@ export class TrainingService {
         url: dto.url,
         skills: dto.skills,
         status: dto.status ? this.toCourseStatus(dto.status) : undefined,
+        featured: dto.featured,
       },
     });
   }
@@ -63,6 +124,7 @@ export class TrainingService {
     if (!course) {
       throw new NotFoundException('Training course not found');
     }
+    return course;
   }
 
   private toCourseStatus(status: 'active' | 'inactive') {
@@ -70,6 +132,12 @@ export class TrainingService {
   }
 
   async getPersonalizedRecommendations(userId: string, jobId: string) {
+    await this.entitlements.assertPremium(
+      userId,
+      BILLING_FEATURES.TRAINING_RECS,
+      'Personalized course recommendations are a Premium feature.',
+    );
+
     const user = await this.database.user.findUnique({
       where: { id: userId },
       select: { skills: true },

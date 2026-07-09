@@ -6,6 +6,7 @@ const AuthContext = createContext(null);
 const ROLE_ROUTES = {
   job_seeker: "/seeker",
   employer: "/employer",
+  training_provider: "/provider",
   admin: "/admin",
 };
 
@@ -70,6 +71,10 @@ export function AuthProvider({ children }) {
   };
 
   const getDashboardRoute = (role) => ROLE_ROUTES[role] || "/";
+  const isPremium =
+    user?.role === "admin" ||
+    ((user?.plan === "premium" || user?.plan === "PREMIUM") &&
+      (!user?.planExpiresAt || new Date(user.planExpiresAt).getTime() > Date.now()));
 
   return (
     <AuthContext.Provider
@@ -82,6 +87,7 @@ export function AuthProvider({ children }) {
         refreshUser,
         getDashboardRoute,
         isAuthenticated: !!user,
+        isPremium,
       }}
     >
       {children}

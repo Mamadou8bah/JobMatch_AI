@@ -10,6 +10,7 @@ datasource db {
 enum UserRole {
   JOB_SEEKER
   EMPLOYER
+  TRAINING_PROVIDER
   ADMIN
 }
 
@@ -54,6 +55,23 @@ enum CoachMessageRole {
   ASSISTANT
 }
 
+enum SubscriptionPlan {
+  FREE
+  PREMIUM
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+}
+
+enum BillingInterval {
+  MONTHLY
+  YEARLY
+}
+
 model User {
   id                     String            @id @default(uuid())
   email                  String            @unique
@@ -76,6 +94,10 @@ model User {
   cvFilePath             String?
   cvMimeType             String?
   cvText                 String?
+  avatarUrl              String?
+  avatarPublicId         String?
+  plan                   SubscriptionPlan  @default(FREE)
+  planExpiresAt          DateTime?
   createdAt              DateTime          @default(now())
   updatedAt              DateTime          @updatedAt
   refreshTokens          RefreshToken[]
@@ -89,6 +111,45 @@ model User {
   auditLogs              AuditLog[]        @relation("ActorAuditLogs")
   messagesRead           ChatMessageRead[]
   coachMessages          CoachMessage[]
+  subscriptions          Subscription[]
+  usageCounters          UsageCounter[]
+  ownedCourses           TrainingCourse[]  @relation("CourseOwner")
+}
+
+model Subscription {
+  id                    String             @id @default(uuid())
+  userId                String
+  plan                  SubscriptionPlan   @default(PREMIUM)
+  status                SubscriptionStatus @default(ACTIVE)
+  interval              BillingInterval    @default(MONTHLY)
+  amountGmd             Int
+  currency              String             @default("GMD")
+  currentPeriodStart    DateTime
+  currentPeriodEnd      DateTime
+  modemPaymentIntentId  String?
+  modemPaymentLink      String?
+  modemCustomerId       String?
+  lastPaymentReference  String?
+  cancelledAt           DateTime?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  user                  User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([modemPaymentIntentId])
+}
+
+model UsageCounter {
+  id        String   @id @default(uuid())
+  userId    String
+  feature   String
+  periodKey String
+  count     Int      @default(0)
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, feature, periodKey])
+  @@index([userId, feature])
 }
 
 model RefreshToken {
@@ -167,8 +228,14 @@ model TrainingCourse {
   url         String?
   skills      String[]             @default([])
   status      TrainingCourseStatus @default(ACTIVE)
+  featured    Boolean              @default(false)
+  ownerId     String?
   createdAt   DateTime             @default(now())
   updatedAt   DateTime             @updatedAt
+  owner       User?                @relation("CourseOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+
+  @@index([ownerId])
+  @@index([featured, status])
 }
 
 model ChatThread {

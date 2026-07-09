@@ -5,6 +5,7 @@ import {
   JobStatus,
   NotificationType,
   PrismaClient,
+  SubscriptionPlan,
   TrainingCourseStatus,
   UserRole,
 } from '@prisma/client';
@@ -29,6 +30,7 @@ export const SEED_IDS = {
     haddy: 'a0000000-0000-4000-8000-00000000001c',
     yusupha: 'a0000000-0000-4000-8000-00000000001d',
     binta: 'a0000000-0000-4000-8000-00000000001e',
+    premiumSeeker: 'a0000000-0000-4000-8000-00000000001f',
     employerAtlantic: 'a0000000-0000-4000-8000-000000000021',
     employerRiver: 'a0000000-0000-4000-8000-000000000022',
     employerTourism: 'a0000000-0000-4000-8000-000000000023',
@@ -37,6 +39,7 @@ export const SEED_IDS = {
     employerRetail: 'a0000000-0000-4000-8000-000000000026',
     employerSkills: 'a0000000-0000-4000-8000-000000000027',
     employerAgro: 'a0000000-0000-4000-8000-000000000028',
+    providerGambia: 'a0000000-0000-4000-8000-000000000031',
   },
   jobs: {
     frontend: 'b0000000-0000-4000-8000-000000000001',
@@ -84,6 +87,12 @@ function daysAgo(n: number) {
   return d;
 }
 
+function daysFromNow(n: number) {
+  const d = new Date();
+  d.setDate(d.getDate() + n);
+  return d;
+}
+
 async function upsertUser(
   prisma: PrismaClient,
   id: string,
@@ -102,8 +111,14 @@ async function upsertUser(
     approved?: boolean;
     emailVerified?: boolean;
     blocked?: boolean;
+    plan?: SubscriptionPlan;
+    planExpiresAt?: Date | null;
   },
 ): Promise<string> {
+  const planFields =
+    data.plan !== undefined
+      ? { plan: data.plan, planExpiresAt: data.planExpiresAt ?? null }
+      : {};
   const user = await prisma.user.upsert({
     where: { email: data.email.toLowerCase() },
     update: {
@@ -119,6 +134,7 @@ async function upsertUser(
       approved: data.approved ?? true,
       emailVerified: data.emailVerified ?? true,
       blocked: data.blocked ?? false,
+      ...planFields,
     },
     create: {
       id,
@@ -136,6 +152,8 @@ async function upsertUser(
       approved: data.approved ?? true,
       emailVerified: data.emailVerified ?? true,
       blocked: data.blocked ?? false,
+      plan: data.plan ?? SubscriptionPlan.FREE,
+      planExpiresAt: data.planExpiresAt ?? null,
     },
   });
   return user.id;
@@ -426,8 +444,40 @@ export async function runDatabaseSeed(prisma: PrismaClient) {
       phone: '+220 400 0000',
       approved: employer.approved ?? true,
       emailVerified: true,
+      plan: employer.key === 'employerAtlantic' ? SubscriptionPlan.PREMIUM : SubscriptionPlan.FREE,
+      planExpiresAt: employer.key === 'employerAtlantic' ? daysFromNow(365) : null,
     });
   }
+
+  userIds.premiumSeeker = await upsertUser(prisma, u.premiumSeeker, {
+    email: 'premium@gmail.com',
+    passwordHash: demoHash,
+    role: UserRole.JOB_SEEKER,
+    fullName: 'Amie Premium',
+    skills: ['react', 'typescript', 'nodejs', 'communication'],
+    experienceYears: 4,
+    location: 'Banjul',
+    bio: 'Premium seeker demo account with full AI unlocks.',
+    phone: '+220 311 0000',
+    approved: true,
+    emailVerified: true,
+    plan: SubscriptionPlan.PREMIUM,
+    planExpiresAt: daysFromNow(365),
+  });
+
+  userIds.providerGambia = await upsertUser(prisma, u.providerGambia, {
+    email: 'provider@gmail.com',
+    passwordHash: demoHash,
+    role: UserRole.TRAINING_PROVIDER,
+    fullName: 'Ousman Training',
+    companyName: 'Gambia Skills Network',
+    companyDescription: 'Local TVET and digital skills provider listed on JobMatch AI.',
+    location: 'Serrekunda',
+    phone: '+220 500 0000',
+    approved: true,
+    emailVerified: true,
+    plan: SubscriptionPlan.FREE,
+  });
 
   const j = SEED_IDS.jobs;
 
@@ -844,6 +894,11 @@ export async function runDatabaseSeed(prisma: PrismaClient) {
   ];
 
   for (const course of courses) {
+    const ownedIds = new Set([
+      'd0000000-0000-4000-8000-000000000001',
+      'd0000000-0000-4000-8000-000000000006',
+    ]);
+    const owned = ownedIds.has(course.id);
     await prisma.trainingCourse.upsert({
       where: { id: course.id },
       update: {
@@ -853,8 +908,15 @@ export async function runDatabaseSeed(prisma: PrismaClient) {
         skills: course.skills,
         url: course.url,
         status: TrainingCourseStatus.ACTIVE,
+        ownerId: owned ? userIds.providerGambia : null,
+        featured: false,
       },
-      create: { ...course, status: TrainingCourseStatus.ACTIVE },
+      create: {
+        ...course,
+        status: TrainingCourseStatus.ACTIVE,
+        ownerId: owned ? userIds.providerGambia : null,
+        featured: false,
+      },
     });
   }
 

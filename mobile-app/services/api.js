@@ -10,15 +10,25 @@ import {
   setCachedJobs,
 } from "./cache.js";
 
+const PRODUCTION_API = "https://jobmatchgambia.onrender.com/api";
+const REQUEST_TIMEOUT_MS = 90000;
+const MAX_ATTEMPTS = 2;
+
+function isEmulator() {
+  return Constants.isDevice === false;
+}
+
 function getDefaultApiBase() {
   if (!__DEV__) {
-    return "https://jobmatchgambia.onrender.com/api";
+    return PRODUCTION_API;
   }
-  // Android emulator maps host machine to 10.0.2.2
-  if (Platform.OS === "android") {
-    return "http://10.0.2.2:3000/api";
+  if (isEmulator()) {
+    if (Platform.OS === "android") {
+      return "http://10.0.2.2:3000/api";
+    }
+    return "http://localhost:3000/api";
   }
-  return "http://localhost:3000/api";
+  return PRODUCTION_API;
 }
 
 const API_BASE =
@@ -32,6 +42,18 @@ export class ApiError extends Error {
     this.name = "ApiError";
     this.status = status;
     this.data = data;
+  }
+
+  get isPremiumRequired() {
+    return (
+      this.status === 402 ||
+      this.data?.error === "PremiumRequired" ||
+      /premium|upgrade/i.test(this.message || "")
+    );
+  }
+
+  get upgradePath() {
+    return this.data?.upgradePath || "/billing";
   }
 }
 
@@ -55,6 +77,27 @@ async function refreshAccessToken() {
   return data.accessToken;
 }
 
+async function wakeBackend() {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
+  try {
+    await fetch(`${API_BASE}/health`, {
+      method: "GET",
+      signal: controller.signal,
+    });
+  } catch {
+    // Render may be cold-starting; the main request will retry.
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function isRetryableNetworkError(err) {
+  if (err?.name === "AbortError") return true;
+  if (err instanceof TypeError) return true;
+  return /network|fetch|failed|timeout/i.test(err?.message || "");
+}
+
 async function request(path, options = {}) {
   const { accessToken } = await getTokens();
   const headers = { ...options.headers };
@@ -64,57 +107,71 @@ async function request(path, options = {}) {
   }
   if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 12000);
+  let lastError;
 
-  try {
-    let res = await fetch(`${API_BASE}${path}`, {
-      ...options,
-      headers,
-      signal: controller.signal,
-    });
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
+    if (attempt === 1) {
+      await wakeBackend();
+    }
 
-    if (res.status === 401 && accessToken) {
-      const newToken = await refreshAccessToken();
-      if (newToken) {
-        headers.Authorization = `Bearer ${newToken}`;
-        res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+    try {
+      let res = await fetch(`${API_BASE}${path}`, {
+        ...options,
+        headers,
+        signal: controller.signal,
+      });
+
+      if (res.status === 401 && accessToken) {
+        const newToken = await refreshAccessToken();
+        if (newToken) {
+          headers.Authorization = `Bearer ${newToken}`;
+          res = await fetch(`${API_BASE}${path}`, { ...options, headers, signal: controller.signal });
+        }
       }
-    }
 
-    const contentType = res.headers.get("content-type");
-    const data = contentType?.includes("application/json")
-      ? await res.json()
-      : await res.text();
+      const contentType = res.headers.get("content-type");
+      const data = contentType?.includes("application/json")
+        ? await res.json()
+        : await res.text();
 
-    if (!res.ok) {
-      const message =
-        typeof data === "object" && data?.message
-          ? Array.isArray(data.message)
-            ? data.message.join(", ")
-            : data.message
-          : `Request failed (${res.status})`;
-      throw new ApiError(message, res.status, data);
-    }
+      if (!res.ok) {
+        const message =
+          typeof data === "object" && data?.message
+            ? Array.isArray(data.message)
+              ? data.message.join(", ")
+              : data.message
+            : `Request failed (${res.status})`;
+        throw new ApiError(message, res.status, data);
+      }
 
-    await cacheResponse(path, data);
-    return data;
-  } catch (err) {
-    if (err.name === "AbortError") {
+      await cacheResponse(path, data);
+      return data;
+    } catch (err) {
+      lastError = err;
+      if (attempt < MAX_ATTEMPTS - 1 && isRetryableNetworkError(err)) {
+        continue;
+      }
+
       const cached = await getOfflineFallback(path);
       if (cached != null) return cached;
-      throw new ApiError(
-        "Cannot reach the server. Showing cached data when available.",
-        0,
-        null
-      );
+
+      if (err.name === "AbortError" || isRetryableNetworkError(err)) {
+        throw new ApiError(
+          "Having trouble reaching the server. Pull down to refresh in a moment.",
+          0,
+          null,
+        );
+      }
+      throw err;
+    } finally {
+      clearTimeout(timeout);
     }
-    const cached = await getOfflineFallback(path);
-    if (cached != null) return cached;
-    throw err;
-  } finally {
-    clearTimeout(timeout);
   }
+
+  throw lastError;
 }
 
 async function getOfflineFallback(path) {
@@ -141,6 +198,7 @@ export const api = {
     }),
   patch: (path, body) =>
     request(path, { method: "PATCH", body: JSON.stringify(body) }),
+  delete: (path) => request(path, { method: "DELETE" }),
 
   auth: {
     login: (email, password) =>
@@ -161,10 +219,12 @@ export const api = {
         await clearTokens();
       }
     },
+    forgotPassword: (email) => api.post("/auth/forgot-password", { email }),
     me: () => api.get("/auth/me"),
   },
 
   users: {
+    me: () => api.get("/users/me"),
     updateMe: (data) => api.patch("/users/me", data),
     updateSkills: (skills) => api.patch("/users/me/skills", { skills }),
     uploadCv: (file) => {
@@ -172,6 +232,20 @@ export const api = {
       form.append("file", file);
       return api.post("/users/me/cv", form);
     },
+    uploadAvatar: (file) => {
+      const form = new FormData();
+      form.append("file", file);
+      return api.post("/users/me/avatar", form);
+    },
+    removeAvatar: () => api.delete("/users/me/avatar"),
+  },
+
+  billing: {
+    plans: () => api.get("/billing/plans"),
+    me: () => api.get("/billing/me"),
+    checkout: (data) => api.post("/billing/checkout", data),
+    confirm: (paymentIntentId) =>
+      api.post("/billing/confirm", { paymentIntentId }),
   },
 
   jobs: {

@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import BrandLogo from "../BrandLogo.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";
 import NotificationBell from "./NotificationBell.jsx";
-import { initials } from "./icons.jsx";
+import UserAvatar from "./UserAvatar.jsx";
 import { cn } from "../../lib/cn.js";
 
 const roleAccent = {
@@ -129,11 +129,11 @@ export default function DashboardHeader({ basePath = "", onMenuOpen }) {
 
             {profilePath ? (
               <Link to={profilePath} className="dash-header-avatar hidden sm:grid" title="Your profile">
-                {initials(user?.fullName)}
+                <UserAvatar user={user} />
               </Link>
             ) : (
               <div className="dash-header-avatar hidden sm:grid" title={user?.fullName || user?.email}>
-                {initials(user?.fullName)}
+                <UserAvatar user={user} />
               </div>
             )}
           </div>

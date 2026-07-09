@@ -45,7 +45,7 @@ export class AuthService {
         phone: dto.phone,
         location: dto.location,
         skills: [],
-        approved: dto.role !== UserRole.Employer,
+        approved: dto.role !== UserRole.Employer && dto.role !== UserRole.TrainingProvider,
         emailVerified: true,
         emailVerificationToken: null,
       },
@@ -183,9 +183,11 @@ export class AuthService {
     [key: string]: unknown;
   }) {
     const { passwordHash, emailVerificationToken, passwordResetToken, ...safeUser } = user;
+    const rawPlan = String(user.plan ?? 'FREE').toUpperCase();
     return {
       ...safeUser,
       role: fromDbUserRole(user.role),
+      plan: rawPlan === 'PREMIUM' ? 'premium' : 'free',
     };
   }
 

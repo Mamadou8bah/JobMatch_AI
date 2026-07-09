@@ -1,30 +1,32 @@
-import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
   Linking,
-  Pressable,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import GlassBackground from "../components/GlassBackground";
+import EmptyState from "../components/EmptyState";
+import PrimaryButton from "../components/PrimaryButton";
+import ScreenBackground from "../components/ScreenBackground";
+import ScreenHeader from "../components/ScreenHeader";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../services/api.js";
-import { colors, radius, spacing } from "../constants/theme";
+import { colors, radius, shadow, spacing } from "../constants/theme";
 
 export default function TrainingScreen() {
   const insets = useSafeAreaInsets();
-  const { user } = useAuth();
+  const { user, isPremium } = useAuth();
   const [courses, setCourses] = useState([]);
   const [roadmap, setRoadmap] = useState(null);
   const [goal, setGoal] = useState("Frontend Developer");
   const [loading, setLoading] = useState(true);
   const [roadmapLoading, setRoadmapLoading] = useState(false);
+  const [premiumBlocked, setPremiumBlocked] = useState(false);
 
   useEffect(() => {
     api.training.list().then(setCourses).finally(() => setLoading(false));
@@ -32,16 +34,19 @@ export default function TrainingScreen() {
 
   const generateRoadmap = async () => {
     setRoadmapLoading(true);
+    setPremiumBlocked(false);
     try {
       const data = await api.ai.learningRoadmap(goal, user?.skills || []);
       setRoadmap(data.roadmap || data);
+    } catch (err) {
+      if (err.isPremiumRequired) setPremiumBlocked(true);
     } finally {
       setRoadmapLoading(false);
     }
   };
 
   return (
-    <GlassBackground>
+    <ScreenBackground>
       <FlatList
         data={courses}
         keyExtractor={(item) => item.id}
@@ -52,15 +57,23 @@ export default function TrainingScreen() {
         }}
         ListHeaderComponent={
           <View>
-            <View style={styles.header}>
-              <Text style={styles.title}>Training</Text>
-              <Pressable onPress={() => router.back()}>
-                <Ionicons name="close" size={24} color={colors.ink} />
-              </Pressable>
-            </View>
+            <ScreenHeader title="Training" />
 
-            <View style={styles.roadmapCard}>
+            {!isPremium ? (
+              <View style={[styles.gateCard, shadow.card]}>
+                <Text style={styles.sectionTitle}>Premium AI training</Text>
+                <Text style={styles.sectionHint}>
+                  Browse courses free. Upgrade for personalized recommendations and learning roadmaps.
+                </Text>
+                <PrimaryButton title="Upgrade to Premium" onPress={() => router.push("/billing")} />
+              </View>
+            ) : null}
+
+            <View style={[styles.roadmapCard, shadow.card]}>
               <Text style={styles.sectionTitle}>AI Learning Roadmap</Text>
+              <Text style={styles.sectionHint}>
+                Generate a personalized plan based on your skills and career goal.
+              </Text>
               <TextInput
                 style={styles.input}
                 value={goal}
@@ -68,14 +81,20 @@ export default function TrainingScreen() {
                 placeholder="Career goal"
                 placeholderTextColor={colors.muted}
               />
-              <Pressable style={styles.primaryBtn} onPress={generateRoadmap} disabled={roadmapLoading}>
-                {roadmapLoading ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.primaryBtnText}>Generate roadmap</Text>
-                )}
-              </Pressable>
-              {roadmap?.summary && <Text style={styles.summary}>{roadmap.summary}</Text>}
+              <PrimaryButton
+                title="Generate roadmap"
+                onPress={generateRoadmap}
+                loading={roadmapLoading}
+              />
+              {premiumBlocked ? (
+                <View style={{ marginTop: spacing.md, gap: 10 }}>
+                  <Text style={styles.sectionHint}>
+                    Learning roadmaps are included with Seeker Premium.
+                  </Text>
+                  <PrimaryButton title="Upgrade" onPress={() => router.push("/billing")} />
+                </View>
+              ) : null}
+              {roadmap?.summary ? <Text style={styles.summary}>{roadmap.summary}</Text> : null}
               {(roadmap?.steps || []).map((step) => (
                 <View key={step.step} style={styles.step}>
                   <Text style={styles.stepTitle}>
@@ -87,69 +106,86 @@ export default function TrainingScreen() {
             </View>
 
             <Text style={[styles.sectionTitle, { marginTop: spacing.lg }]}>Courses</Text>
-            {loading && <ActivityIndicator color={colors.primary} style={{ marginVertical: 20 }} />}
+            {loading ? <ActivityIndicator color={colors.primary} style={{ marginVertical: 20 }} /> : null}
           </View>
         }
         renderItem={({ item }) => (
-          <Pressable
-            style={styles.courseCard}
-            onPress={() => item.url && Linking.openURL(item.url)}
-          >
+          <View style={[styles.courseCard, shadow.card]}>
             <Text style={styles.courseTitle}>{item.title}</Text>
             <Text style={styles.courseMeta}>{item.provider}</Text>
             {item.description ? <Text style={styles.courseDesc}>{item.description}</Text> : null}
-          </Pressable>
+            {item.url ? (
+              <PrimaryButton
+                title="Open course"
+                variant="outline"
+                onPress={() => Linking.openURL(item.url)}
+              />
+            ) : null}
+          </View>
         )}
+        ListEmptyComponent={
+          !loading ? (
+            <EmptyState
+              icon="school-outline"
+              title="No courses available"
+              message="Check back later for new training content."
+              actionLabel="Go to AI Coach"
+              onAction={() => router.push("/(tabs)/coach")}
+            />
+          ) : null
+        }
       />
-    </GlassBackground>
+    </ScreenBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: spacing.lg,
-  },
-  title: { fontSize: 24, fontWeight: "800", color: colors.ink },
-  roadmapCard: {
-    backgroundColor: "#fff",
+  gateCard: {
+    backgroundColor: colors.surface,
     borderRadius: radius.xl,
     padding: spacing.lg,
     marginBottom: spacing.md,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  sectionTitle: { fontSize: 18, fontWeight: "700", color: colors.ink, marginBottom: spacing.sm },
+  roadmapCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.xl,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  sectionTitle: { fontSize: 18, fontWeight: "700", color: colors.ink },
+  sectionHint: { color: colors.muted, fontSize: 13, lineHeight: 20 },
   input: {
-    backgroundColor: "#F4F4F5",
+    backgroundColor: colors.background,
     borderRadius: radius.md,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  primaryBtn: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.pill,
-    paddingVertical: 12,
-    alignItems: "center",
-  },
-  primaryBtnText: { color: "#fff", fontWeight: "700" },
-  summary: { marginTop: spacing.md, color: colors.ink, lineHeight: 21 },
+  summary: { color: colors.ink, lineHeight: 21 },
   step: {
-    marginTop: spacing.sm,
     padding: spacing.sm,
-    backgroundColor: "#F4F4F5",
+    backgroundColor: colors.background,
     borderRadius: radius.md,
   },
   stepTitle: { fontWeight: "700", color: colors.ink },
   stepMeta: { color: colors.muted, marginTop: 2, fontSize: 12 },
   courseCard: {
-    backgroundColor: "rgba(255,255,255,0.9)",
+    backgroundColor: colors.surface,
     borderRadius: radius.lg,
     padding: spacing.lg,
     marginBottom: spacing.sm,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   courseTitle: { fontWeight: "700", color: colors.ink, fontSize: 16 },
-  courseMeta: { color: colors.primary, marginTop: 4, fontWeight: "600" },
-  courseDesc: { color: colors.muted, marginTop: 6, lineHeight: 20 },
+  courseMeta: { color: colors.primary, fontWeight: "600" },
+  courseDesc: { color: colors.muted, lineHeight: 20 },
 });

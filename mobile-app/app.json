@@ -4,13 +4,13 @@
     "slug": "jobmatch-ai",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/jobmatch_logo.png",
     "userInterfaceStyle": "light",
     "scheme": "jobmatch",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/jobmatch_logo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#6BA3D8"
+      "backgroundColor": "#111827"
     },
     "ios": {
       "supportsTablet": true,
@@ -18,21 +18,33 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#6BA3D8"
+        "foregroundImage": "./assets/jobmatch_logo.png",
+        "backgroundColor": "#111827"
       },
       "package": "com.jobmatch.ai"
     },
     "plugins": [
       "expo-router",
       "expo-asset",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow JobMatch AI to access your photos to set a profile picture."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
     },
     "extra": {
-      "apiUrl": "https://jobmatchgambia.onrender.com/api"
+      "apiUrl": "https://jobmatchgambia.onrender.com/api",
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "8cad8e3b-40f5-437e-bd6f-77ee44890d0e"
+      }
     }
   }
 }

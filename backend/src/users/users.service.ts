@@ -13,6 +13,7 @@ import { fromDbUserRole } from '../common/mappers';
 import { mergeSkills } from '../common/merge-skills';
 import { UserRole } from '../common/enums/role.enum';
 import { AiEngineClient } from '../ai-connection/ai-engine.client';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { DatabaseService } from '../database/database.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { parseCvLocally } from './cv-parser.fallback';
@@ -22,6 +23,7 @@ export class UsersService {
   constructor(
     private readonly store: DatabaseService,
     private readonly aiEngineClient: AiEngineClient,
+    private readonly cloudinary: CloudinaryService,
   ) {}
 
   async listUsers() {
@@ -114,6 +116,60 @@ export class UsersService {
     };
   }
 
+  async uploadAvatar(currentUserId: string, file?: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('Profile picture file is required');
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      throw new BadRequestException('Profile picture must be 2MB or smaller');
+    }
+
+    this.assertSupportedAvatarFile(file);
+
+    const existingUser = await this.store.user.findUnique({ where: { id: currentUserId } });
+    if (!existingUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    const { url, publicId } = await this.cloudinary.uploadAvatar(file, currentUserId);
+
+    if (existingUser.avatarPublicId && existingUser.avatarPublicId !== publicId) {
+      await this.cloudinary.deleteImage(existingUser.avatarPublicId);
+    }
+
+    const updatedUser = await this.store.user.update({
+      where: { id: currentUserId },
+      data: {
+        avatarUrl: url,
+        avatarPublicId: publicId,
+      },
+    });
+
+    return this.sanitizeUser(updatedUser);
+  }
+
+  async removeAvatar(currentUserId: string) {
+    const existingUser = await this.store.user.findUnique({ where: { id: currentUserId } });
+    if (!existingUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (existingUser.avatarPublicId) {
+      await this.cloudinary.deleteImage(existingUser.avatarPublicId);
+    }
+
+    const updatedUser = await this.store.user.update({
+      where: { id: currentUserId },
+      data: {
+        avatarUrl: null,
+        avatarPublicId: null,
+      },
+    });
+
+    return this.sanitizeUser(updatedUser);
+  }
+
   private async parseUploadedCv(file: Express.Multer.File) {
     try {
       const parsed = await this.aiEngineClient.parseResumeFile({
@@ -142,9 +198,11 @@ export class UsersService {
 
   sanitizeUser(user: DbUser) {
     const { passwordHash, emailVerificationToken, passwordResetToken, ...safeUser } = user;
+    const rawPlan = String(user.plan ?? 'FREE').toUpperCase();
     return {
       ...safeUser,
       role: fromDbUserRole(user.role),
+      plan: rawPlan === 'PREMIUM' ? 'premium' : 'free',
     };
   }
 
@@ -165,6 +223,20 @@ export class UsersService {
     }
 
     throw new UnsupportedMediaTypeException('CV must be a PDF, DOCX, or plain text file');
+  }
+
+  private assertSupportedAvatarFile(file: Express.Multer.File) {
+    const allowed = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/jpg']);
+    if (allowed.has(file.mimetype)) {
+      return;
+    }
+
+    const lowerName = file.originalname.toLowerCase();
+    if (lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg') || lowerName.endsWith('.png') || lowerName.endsWith('.webp')) {
+      return;
+    }
+
+    throw new UnsupportedMediaTypeException('Profile picture must be a JPEG, PNG, or WebP image');
   }
 
   private extensionFromMimeType(mimeType: string) {

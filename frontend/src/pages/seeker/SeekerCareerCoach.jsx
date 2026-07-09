@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../../services/api.js";
 import { useAuth } from "../../context/AuthContext.jsx";
 import ICONS, { Icon } from "../../components/dashboard/icons.jsx";
+import PremiumGate from "../../components/dashboard/PremiumGate.jsx";
 
 const WELCOME_MESSAGE = {
   id: "welcome",
@@ -11,12 +13,14 @@ const WELCOME_MESSAGE = {
 };
 
 export default function SeekerCareerCoach() {
-  const { user } = useAuth();
+  const { user, isPremium } = useAuth();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [error, setError] = useState("");
+  const [premiumBlocked, setPremiumBlocked] = useState(false);
+  const [quota, setQuota] = useState(null);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -30,6 +34,10 @@ export default function SeekerCareerCoach() {
         setMessages([WELCOME_MESSAGE]);
       })
       .finally(() => setHistoryLoading(false));
+
+    api.billing.me().then((status) => {
+      setQuota(status.features?.coachChat || null);
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -44,6 +52,7 @@ export default function SeekerCareerCoach() {
     setInput("");
     setLoading(true);
     setError("");
+    setPremiumBlocked(false);
 
     const optimisticUser = {
       id: `temp-user-${Date.now()}`,
@@ -64,7 +73,9 @@ export default function SeekerCareerCoach() {
         }
         return next.length ? next : [WELCOME_MESSAGE];
       });
+      api.billing.me().then((status) => setQuota(status.features?.coachChat || null)).catch(() => {});
     } catch (err) {
+      if (err.isPremiumRequired) setPremiumBlocked(true);
       setError(err.message);
       setMessages((prev) => prev.filter((m) => m.id !== optimisticUser.id));
     } finally {
@@ -93,6 +104,12 @@ export default function SeekerCareerCoach() {
           <p className="dash-coach-subtitle">
             Ask about roles, skills, CV tips, and interview preparation for {user?.fullName || "your profile"}.
           </p>
+          {!isPremium && quota?.limit != null ? (
+            <p className="text-sm text-zinc-500" style={{ marginTop: 6 }}>
+              Free plan: {quota.used}/{quota.limit} coach messages today ·{" "}
+              <Link to="/seeker/billing" className="dash-inline-link">Upgrade</Link>
+            </p>
+          ) : null}
         </div>
         {messages.some((m) => m.id !== "welcome") && (
           <button type="button" className="dash-btn sm" onClick={clearHistory} disabled={loading}>
@@ -100,7 +117,13 @@ export default function SeekerCareerCoach() {
           </button>
         )}
       </div>
-      {error && <div className="dash-alert error">{error}</div>}
+      {premiumBlocked ? (
+        <PremiumGate
+          title="Daily coach limit reached"
+          message="Free seekers get a limited number of AI coach messages each day. Upgrade for unlimited personalized guidance."
+        />
+      ) : null}
+      {error && !premiumBlocked ? <div className="dash-alert error">{error}</div> : null}
 
       <div className="dash-card dash-coach-panel">
         {historyLoading ? (

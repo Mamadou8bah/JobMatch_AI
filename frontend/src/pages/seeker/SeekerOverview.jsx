@@ -28,6 +28,7 @@ export default function SeekerOverview() {
     user?.location,
     user?.skills?.length,
     user?.cvFileName,
+    user?.avatarUrl,
   ].filter(Boolean).length;
 
   const shortlisted = applications.filter((a) => a.status === "shortlisted");
@@ -72,7 +73,7 @@ export default function SeekerOverview() {
         />
         <StatCard
           label="Profile Complete"
-          value={`${Math.round((profileComplete / 4) * 100)}%`}
+          value={`${Math.round((profileComplete / 5) * 100)}%`}
           icon={<Icon icon={ICONS.checkCircle} size={20} />}
           to="/seeker/profile"
         />
@@ -159,7 +160,7 @@ export default function SeekerOverview() {
         </div>
       </div>
 
-      {profileComplete < 4 && (
+      {profileComplete < 5 && (
         <div className="dash-alert info">
           Complete your profile for better job matches.{" "}
           <Link to="/seeker/profile" className="dash-inline-link">

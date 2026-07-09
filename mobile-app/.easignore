@@ -1,0 +1,17 @@
+# Dependencies and caches
+node_modules/
+.expo/
+dist/
+web-build/
+
+# Secrets
+.env
+.env.*
+
+# Git
+.git/
+.gitignore
+
+# Docs / CI (not needed in update bundle)
+README.md
+../.github/

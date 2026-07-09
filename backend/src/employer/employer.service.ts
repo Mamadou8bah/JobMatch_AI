@@ -1,11 +1,18 @@
 import { Injectable } from '@nestjs/common';
+import { BILLING_FEATURES } from '../billing/billing.constants';
+import { EntitlementsService } from '../billing/entitlements.service';
 import { DatabaseService } from '../database/database.service';
 
 @Injectable()
 export class EmployerService {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(
+    private readonly database: DatabaseService,
+    private readonly entitlements: EntitlementsService,
+  ) {}
 
   async analytics(employerId: string) {
+    await this.entitlements.assertCanUseAnalytics(employerId);
+
     const jobs = await this.database.job.findMany({
       where: { employerId },
       select: { id: true, title: true, status: true, views: true, createdAt: true },

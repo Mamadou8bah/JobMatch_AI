@@ -29,6 +29,10 @@ import EmployerRanking from "./pages/employer/EmployerRanking.jsx";
 import EmployerAnalytics from "./pages/employer/EmployerAnalytics.jsx";
 import EmployerProfile from "./pages/employer/EmployerProfile.jsx";
 
+import ProviderLayout from "./pages/provider/ProviderLayout.jsx";
+import ProviderCourses from "./pages/provider/ProviderCourses.jsx";
+import ProviderProfile from "./pages/provider/ProviderProfile.jsx";
+
 import SeekerLayout from "./pages/seeker/SeekerLayout.jsx";
 import SeekerOverview from "./pages/seeker/SeekerOverview.jsx";
 import SeekerProfile from "./pages/seeker/SeekerProfile.jsx";
@@ -36,6 +40,7 @@ import SeekerRecommendations from "./pages/seeker/SeekerRecommendations.jsx";
 import SeekerApplications from "./pages/seeker/SeekerApplications.jsx";
 import SeekerTraining from "./pages/seeker/SeekerTraining.jsx";
 import SeekerCareerCoach from "./pages/seeker/SeekerCareerCoach.jsx";
+import Billing from "./pages/Billing.jsx";
 
 import Notifications from "./pages/shared/Notifications.jsx";
 import Messages from "./pages/shared/Messages.jsx";
@@ -49,7 +54,6 @@ function AppRoutes() {
         <Route path="/portal" element={<Portal />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-
         <Route
           path="/admin"
           element={
@@ -85,6 +89,7 @@ function AppRoutes() {
           <Route path="ranking" element={<EmployerRanking />} />
           <Route path="analytics" element={<EmployerAnalytics />} />
           <Route path="profile" element={<EmployerProfile />} />
+          <Route path="billing" element={<Billing />} />
           <Route path="messages" element={<Messages />} />
           <Route path="notifications" element={<Notifications />} />
         </Route>
@@ -103,7 +108,22 @@ function AppRoutes() {
           <Route path="applications" element={<SeekerApplications />} />
           <Route path="training" element={<SeekerTraining />} />
           <Route path="coach" element={<SeekerCareerCoach />} />
+          <Route path="billing" element={<Billing />} />
           <Route path="messages" element={<Messages />} />
+          <Route path="notifications" element={<Notifications />} />
+        </Route>
+
+        <Route
+          path="/provider"
+          element={
+            <ProtectedRoute allowedRoles={["training_provider"]}>
+              <ProviderLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<ProviderCourses />} />
+          <Route path="billing" element={<Billing />} />
+          <Route path="profile" element={<ProviderProfile />} />
           <Route path="notifications" element={<Notifications />} />
         </Route>
 

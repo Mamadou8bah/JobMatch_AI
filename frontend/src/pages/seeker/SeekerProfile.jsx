@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "../../services/api.js";
 import { useAuth } from "../../context/AuthContext.jsx";
 import ICONS, { Icon } from "../../components/dashboard/icons.jsx";
+import UserAvatar from "../../components/dashboard/UserAvatar.jsx";
 
 function profileFormFromUser(user) {
   return {
@@ -18,6 +19,8 @@ export default function SeekerProfile() {
   const [form, setForm] = useState(() => profileFormFromUser(user));
   const [profileLoading, setProfileLoading] = useState(true);
   const [cvFile, setCvFile] = useState(null);
+  const [avatarFile, setAvatarFile] = useState(null);
+  const avatarInputRef = useRef(null);
   const [parsed, setParsed] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -113,6 +116,39 @@ export default function SeekerProfile() {
     }
   };
 
+  const handleAvatarUpload = async () => {
+    if (!avatarFile) return;
+    setLoading(true);
+    setError("");
+    try {
+      await api.users.uploadAvatar(avatarFile);
+      await refreshUser();
+      setAvatarFile(null);
+      if (avatarInputRef.current) avatarInputRef.current.value = "";
+      setSuccess("Profile picture updated");
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAvatarRemove = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      await api.users.removeAvatar();
+      await refreshUser();
+      setSuccess("Profile picture removed");
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <>
       <h1 className="dash-page-title">Profile & CV</h1>
@@ -125,6 +161,42 @@ export default function SeekerProfile() {
         </div>
       ) : (
         <div className="dash-profile-grid dash-grid-2">
+          <div className="dash-card dash-profile-card">
+            <h3 className="dash-card-title">Profile Picture</h3>
+            <div className="dash-profile-avatar-row">
+              <div className="dash-header-avatar" style={{ width: 88, height: 88 }}>
+                <UserAvatar user={user} />
+              </div>
+              <div className="dash-profile-avatar-actions">
+                <input
+                  ref={avatarInputRef}
+                  className="dash-profile-file-input"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
+                />
+                <button
+                  type="button"
+                  className="dash-btn primary dash-profile-save"
+                  onClick={handleAvatarUpload}
+                  disabled={!avatarFile || loading}
+                >
+                  {loading ? "Uploading..." : "Upload photo"}
+                </button>
+                {user?.avatarUrl ? (
+                  <button
+                    type="button"
+                    className="dash-btn"
+                    onClick={handleAvatarRemove}
+                    disabled={loading}
+                  >
+                    Remove photo
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          </div>
+
           <div className="dash-card dash-profile-card">
             <h3 className="dash-card-title">Personal Information</h3>
             <form onSubmit={handleSave} className="dash-profile-form">

@@ -1,4 +1,4 @@
-import { IsArray, IsIn, IsOptional, IsString, IsUrl } from 'class-validator';
+import { IsArray, IsBoolean, IsIn, IsOptional, IsString, IsUrl } from 'class-validator';
 
 export class UpdateTrainingCourseDto {
   @IsOptional()
@@ -25,4 +25,8 @@ export class UpdateTrainingCourseDto {
   @IsOptional()
   @IsIn(['active', 'inactive'])
   status?: 'active' | 'inactive';
+
+  @IsOptional()
+  @IsBoolean()
+  featured?: boolean;
 }

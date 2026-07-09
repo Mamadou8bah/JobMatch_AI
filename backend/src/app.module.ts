@@ -11,6 +11,8 @@ import { UsersModule } from './users/users.module';
 import { ChatModule } from './chat/chat.module';
 import { AdminModule } from './admin/admin.module';
 import { TrainingModule } from './training/training.module';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
+import { BillingModule } from './billing/billing.module';
 import { EmployerModule } from './employer/employer.module';
 
 @Module({
@@ -26,6 +28,8 @@ import { EmployerModule } from './employer/employer.module';
     ChatModule,
     AdminModule,
     TrainingModule,
+    CloudinaryModule,
+    BillingModule,
     EmployerModule,
   ],
   controllers: [AppController],

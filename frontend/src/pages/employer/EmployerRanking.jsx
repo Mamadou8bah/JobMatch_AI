@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../../services/api.js";
 import { useAuth } from "../../context/AuthContext.jsx";
-import StatusBadge from "../../components/dashboard/StatusBadge.jsx";
 
 export default function EmployerRanking() {
   const { user } = useAuth();
   const [jobs, setJobs] = useState([]);
   const [selectedJob, setSelectedJob] = useState("");
   const [matches, setMatches] = useState([]);
+  const [premiumGate, setPremiumGate] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -25,9 +26,18 @@ export default function EmployerRanking() {
   useEffect(() => {
     if (!selectedJob) return;
     setLoading(true);
+    setError("");
     api.jobs
       .matches(selectedJob)
-      .then(setMatches)
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setMatches(data);
+          setPremiumGate(null);
+        } else {
+          setMatches(data.matches || []);
+          setPremiumGate(data.premiumRequired ? data : null);
+        }
+      })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, [selectedJob]);
@@ -36,6 +46,17 @@ export default function EmployerRanking() {
     <>
       <h1 className="dash-page-title">Applicant Ranking</h1>
       {error && <div className="dash-alert error">{error}</div>}
+      {premiumGate ? (
+        <div className="dash-alert warning">
+          {premiumGate.message}{" "}
+          <Link to="/employer/billing" className="dash-inline-link">
+            Upgrade to Premium
+          </Link>
+          {premiumGate.totalCandidates != null
+            ? ` (${premiumGate.totalCandidates} candidates matched)`
+            : null}
+        </div>
+      ) : null}
 
       <div className="dash-card">
         <div className="dash-card-header">
@@ -78,23 +99,15 @@ export default function EmployerRanking() {
                       {candidate?.fullName || "Candidate"}
                     </div>
                     <div className="dash-skills" style={{ marginTop: 6 }}>
-                      {(entry.match?.matchedSkills || []).slice(0, 4).map((s) => (
-                        <span key={s} className="dash-skill-tag">{s}</span>
-                      ))}
-                      {(entry.match?.missingSkills || []).slice(0, 2).map((s) => (
-                        <span key={s} className="dash-skill-tag missing">{s}</span>
-                      ))}
+                      {(entry.match?.matchedSkills || candidate?.skills || [])
+                        .slice(0, 4)
+                        .map((skill) => (
+                          <span key={skill} className="dash-skill-tag">{skill}</span>
+                        ))}
                     </div>
                   </div>
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{ fontWeight: 700, fontSize: "1.25rem" }}>
-                      {Math.round(score)}%
-                    </div>
-                    <StatusBadge
-                      status={
-                        score >= 70 ? "shortlisted" : score >= 40 ? "pending" : "rejected"
-                      }
-                    />
+                  <div style={{ fontWeight: 800, color: "#1B6B45" }}>
+                    {Math.round(score)}%
                   </div>
                 </div>
               );

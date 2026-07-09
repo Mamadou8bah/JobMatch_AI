@@ -75,6 +75,30 @@ const featureCards = [
   },
 ];
 
+const pricingTiers = [
+  {
+    audience: "Job seekers",
+    monthly: "D150",
+    yearly: "D1,500",
+    free: ["Job browse & apply", "Match fit bands", "5 AI coach chats / day", "Course catalog"],
+    premium: ["Exact match scores", "Unlimited AI coach", "Personalized roadmaps", "Training recommendations"],
+  },
+  {
+    audience: "Employers",
+    monthly: "D500",
+    yearly: "D5,000",
+    free: ["2 active job posts", "Top-3 ranking preview", "Applicant messaging"],
+    premium: ["Unlimited jobs", "Full ranking & analytics", "Priority listings"],
+  },
+  {
+    audience: "Training providers",
+    monthly: "D300",
+    yearly: "D3,000",
+    free: ["2 active courses", "Basic catalog listing"],
+    premium: ["Unlimited courses", "Featured placement"],
+  },
+];
+
 function SectionHeading({ eyebrow, title, description, className, dark = false }) {
   return (
     <div className={cn("mx-auto max-w-3xl", className)}>
@@ -359,6 +383,53 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Pricing */}
+      <section id="pricing" className="bg-zinc-50 px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
+        <SectionHeading
+          title="Simple freemium pricing in GMD"
+          description="Start free, then upgrade with ModemPay when you need unlimited AI tools, hiring analytics, or featured training placement."
+          className="text-center"
+        />
+        <div className="mx-auto mt-12 grid max-w-6xl gap-6 lg:grid-cols-3">
+          {pricingTiers.map((tier) => (
+            <article
+              key={tier.audience}
+              className="flex flex-col rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm sm:p-8"
+            >
+              <h3 className="text-xl font-extrabold text-brand-dark">{tier.audience}</h3>
+              <p className="mt-3 text-3xl font-black text-brand-dark">
+                {tier.monthly}
+                <span className="text-base font-semibold text-zinc-500"> / month</span>
+              </p>
+              <p className="mt-1 text-sm text-zinc-500">{tier.yearly} billed yearly</p>
+              <div className="mt-6 flex-1">
+                <p className="text-xs font-bold uppercase tracking-wide text-zinc-400">Free includes</p>
+                <ul className="mt-3 space-y-2 text-sm text-zinc-600">
+                  {tier.free.map((item) => (
+                    <li key={item} className="flex gap-2">
+                      <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-zinc-300" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-5 text-xs font-bold uppercase tracking-wide text-emerald-700">Premium unlocks</p>
+                <ul className="mt-3 space-y-2 text-sm text-zinc-700">
+                  {tier.premium.map((item) => (
+                    <li key={item} className="flex gap-2">
+                      <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-lime" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <Button variant="landingDark" to={authPath} className="mt-8 w-full">
+                Get started
+              </Button>
+            </article>
+          ))}
+        </div>
+      </section>
+
       {/* Steps */}
       <section id="steps" className="bg-brand-dark px-4 py-14 text-white sm:px-6 sm:py-20 lg:px-8">
         <SectionHeading
@@ -453,6 +524,7 @@ export default function Landing() {
             <div className="grid gap-2 text-sm">
               <a href="#about" className="text-white/60 transition hover:text-brand-lime">Solution</a>
               <a href="#features" className="text-white/60 transition hover:text-brand-lime">AI Features</a>
+              <a href="#pricing" className="text-white/60 transition hover:text-brand-lime">Pricing</a>
               <a href="#steps" className="text-white/60 transition hover:text-brand-lime">Workflow</a>
               <a href="#download" className="text-white/60 transition hover:text-brand-lime">Mobile Access</a>
             </div>

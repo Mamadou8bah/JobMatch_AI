@@ -12,4 +12,8 @@ export class JobQueryDto {
   @IsOptional()
   @IsString()
   status?: string;
+
+  @IsOptional()
+  @IsString()
+  employerId?: string;
 }

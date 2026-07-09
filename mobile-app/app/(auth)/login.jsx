@@ -1,24 +1,24 @@
-import { Ionicons } from "@expo/vector-icons";
-import { Link, router } from "expo-router";
+import { router } from "expo-router";
 import { useState } from "react";
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
-import GlassBackground from "../../components/GlassBackground";
-import GlassSurface from "../../components/GlassSurface";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import AuthInput from "../../components/AuthInput";
 import BrandLogo from "../../components/BrandLogo";
+import PrimaryButton from "../../components/PrimaryButton";
+import ScreenBackground from "../../components/ScreenBackground";
 import { useAuth } from "../../context/AuthContext";
-import { colors, radius, spacing } from "../../constants/theme";
+import { colors, spacing } from "../../constants/theme";
 
 export default function LoginScreen() {
+  const insets = useSafeAreaInsets();
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,8 +29,12 @@ export default function LoginScreen() {
     setLoading(true);
     setError("");
     try {
-      await login(email.trim(), password);
-      router.replace("/(tabs)");
+      const user = await login(email.trim(), password);
+      if (!user.cvFileName) {
+        router.replace("/(auth)/upload-resume");
+      } else {
+        router.replace("/(tabs)");
+      }
     } catch (err) {
       setError(err.message || "Login failed");
     } finally {
@@ -39,95 +43,69 @@ export default function LoginScreen() {
   };
 
   return (
-    <GlassBackground>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
-        <ScrollView contentContainerStyle={styles.container}>
-          <View style={styles.hero}>
-            <BrandLogo size="md" style={styles.brandRow} />
-            <Text style={styles.subtitle}>Job seeker mobile app</Text>
+    <ScreenBackground>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <ScrollView
+          contentContainerStyle={{
+            paddingTop: insets.top + spacing.lg,
+            paddingHorizontal: spacing.lg,
+            paddingBottom: insets.bottom + spacing.xl,
+            flexGrow: 1,
+            justifyContent: "center",
+          }}
+        >
+          <View style={styles.header}>
+            <BrandLogo size="xl" />
           </View>
 
-          <GlassSurface style={styles.formCard}>
-            <View style={styles.formInner}>
-              <Text style={styles.title}>Welcome back</Text>
-              <Text style={styles.text}>Sign in to discover new job matches</Text>
+          <Text style={styles.title}>Welcome back</Text>
+          <Text style={styles.subtitle}>Sign in to continue your job search journey.</Text>
 
-              {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error ? <Text style={styles.error}>{error}</Text> : null}
 
-              <TextInput
-                style={styles.input}
-                placeholder="Email"
-                placeholderTextColor={colors.muted}
-                autoCapitalize="none"
-                keyboardType="email-address"
-                value={email}
-                onChangeText={setEmail}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Password"
-                placeholderTextColor={colors.muted}
-                secureTextEntry
-                value={password}
-                onChangeText={setPassword}
-              />
+          <AuthInput
+            label="Email Address"
+            icon="email"
+            placeholder="name@company.com"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+          <AuthInput
+            label="Password"
+            icon="lock"
+            placeholder="Enter your password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
 
-              <Pressable style={styles.primaryBtn} onPress={handleLogin} disabled={loading}>
-                {loading ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.primaryBtnText}>Sign in</Text>
-                )}
-              </Pressable>
+          <PrimaryButton title="Sign In" onPress={handleLogin} loading={loading} icon="arrow-forward" />
 
-              <Link href="/(auth)/register" style={styles.link}>
-                Create a job seeker account
-              </Link>
-            </View>
-          </GlassSurface>
+          <Pressable onPress={() => router.push("/(auth)/forgot-password")} style={styles.forgotLink}>
+            <Text style={styles.forgotText}>Forgot password?</Text>
+          </Pressable>
+
+          <Pressable onPress={() => router.replace("/(auth)/register")} style={styles.footerLink}>
+            <Text style={styles.footerText}>
+              New here? <Text style={styles.footerAccent}>Create account</Text>
+            </Text>
+          </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
-    </GlassBackground>
+    </ScreenBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    padding: spacing.lg,
-    justifyContent: "center",
-  },
-  hero: { alignItems: "center", marginBottom: spacing.xl },
-  brandRow: { marginBottom: spacing.sm },
-  subtitle: { color: colors.muted, marginTop: 4 },
-  formCard: { borderRadius: radius.xl },
-  formInner: { padding: spacing.lg, backgroundColor: "rgba(255,255,255,0.55)" },
-  title: { fontSize: 24, fontWeight: "700", color: colors.ink },
-  text: { color: colors.muted, marginTop: 6, marginBottom: spacing.md },
-  error: { color: colors.error, marginBottom: spacing.sm },
-  input: {
-    backgroundColor: "#fff",
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 14,
-    marginBottom: spacing.sm,
-    fontSize: 15,
-  },
-  primaryBtn: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.pill,
-    paddingVertical: 14,
-    alignItems: "center",
-    marginTop: spacing.sm,
-  },
-  primaryBtnText: { color: "#fff", fontWeight: "700", fontSize: 16 },
-  link: {
-    marginTop: spacing.lg,
-    textAlign: "center",
-    color: colors.primary,
-    fontWeight: "600",
-  },
+  header: { alignItems: "center", marginBottom: spacing.xl },
+  title: { fontSize: 28, fontWeight: "900", color: colors.ink, marginBottom: 8 },
+  subtitle: { color: colors.muted, marginBottom: spacing.lg, fontSize: 15 },
+  error: { color: colors.error, marginBottom: spacing.md },
+  forgotLink: { alignItems: "center", marginTop: spacing.md },
+  forgotText: { color: colors.primary, fontWeight: "700" },
+  footerLink: { marginTop: spacing.lg, alignItems: "center" },
+  footerText: { color: colors.muted },
+  footerAccent: { color: colors.primary, fontWeight: "700" },
 });

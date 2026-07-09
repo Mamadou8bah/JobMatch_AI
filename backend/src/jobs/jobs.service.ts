@@ -1,6 +1,8 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Job as DbJob, UserRole as DbUserRole } from '@prisma/client';
 import { AiEngineClient } from '../ai-connection/ai-engine.client';
+import { FREE_EMPLOYER_RANKING_LIMIT } from '../billing/billing.constants';
+import { EntitlementsService } from '../billing/entitlements.service';
 import { fromDbUserRole, toDbJobStatus } from '../common/mappers';
 import { UserRole } from '../common/enums/role.enum';
 import { DatabaseService } from '../database/database.service';
@@ -13,21 +15,28 @@ export class JobsService {
   constructor(
     private readonly store: DatabaseService,
     private readonly aiEngineClient: AiEngineClient,
+    private readonly entitlements: EntitlementsService,
   ) {}
 
   async listJobs(currentUserId?: string, currentUserRole?: UserRole, query?: JobQueryDto) {
     const currentUser = currentUserId ? await this.store.user.findUnique({ where: { id: currentUserId } }) : undefined;
     const jobs = await this.store.job.findMany({
       orderBy: { createdAt: 'desc' },
-      include: { employer: true },
+      include: {
+        employer: true,
+      },
     });
 
     const normalizedSearch = query?.search?.toLowerCase();
     const normalizedLocation = query?.location?.toLowerCase();
     const normalizedStatus = query?.status?.toLowerCase();
+    const employerId = query?.employerId;
 
     const filteredJobs = jobs
       .filter((job) => {
+        if (employerId) {
+          return job.employerId === employerId;
+        }
         if (normalizedStatus) {
           return job.status.toLowerCase() === normalizedStatus;
         }
@@ -49,7 +58,7 @@ export class JobsService {
           .includes(normalizedSearch);
       });
 
-    return Promise.all(
+    const serialized = await Promise.all(
       filteredJobs.map((job) =>
         this.serializeJob(
           job,
@@ -63,6 +72,14 @@ export class JobsService {
         ),
       ),
     );
+
+    // Premium employers get priority visibility in public job lists
+    return serialized.sort((a, b) => {
+      const aPremium = a.employer?.plan === 'premium' || a.employer?.plan === 'PREMIUM' ? 1 : 0;
+      const bPremium = b.employer?.plan === 'premium' || b.employer?.plan === 'PREMIUM' ? 1 : 0;
+      if (bPremium !== aPremium) return bPremium - aPremium;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
   }
 
   async createJob(employerId: string, role: UserRole, dto: CreateJobDto) {
@@ -75,6 +92,8 @@ export class JobsService {
     if (role === UserRole.Employer && !employer.approved) {
       throw new ForbiddenException('Your employer account must be approved before posting jobs');
     }
+
+    await this.entitlements.assertCanPostJob(employerId, employer.role);
 
     const job = await this.store.job.create({
       data: {
@@ -151,7 +170,7 @@ export class JobsService {
     return { message: 'Job deleted successfully' };
   }
 
-  async getJobMatches(jobId: string) {
+  async getJobMatches(jobId: string, employerId?: string) {
     const job = await this.store.job.findUnique({ where: { id: jobId } });
 
     if (!job) {
@@ -170,6 +189,7 @@ export class JobsService {
           email: user.email,
           location: user.location,
           skills: user.skills,
+          avatarUrl: user.avatarUrl,
         },
         match: await this.aiEngineClient.matchCandidateToJob(
           {
@@ -188,7 +208,24 @@ export class JobsService {
       })),
     );
 
-    return matches.sort((left, right) => right.match.score - left.match.score);
+    const sorted = matches.sort((left, right) => right.match.score - left.match.score);
+
+    if (!employerId || (await this.entitlements.isPremium(employerId))) {
+      return sorted;
+    }
+
+    return {
+      premiumRequired: true,
+      message: `Free employers see the top ${FREE_EMPLOYER_RANKING_LIMIT} candidates. Upgrade for full AI ranking.`,
+      matches: sorted.slice(0, FREE_EMPLOYER_RANKING_LIMIT).map((entry) => ({
+        ...entry,
+        match: {
+          score: entry.match.score,
+          matchedSkills: (entry.match.matchedSkills || []).slice(0, 3),
+        },
+      })),
+      totalCandidates: sorted.length,
+    };
   }
 
   private ensureEmployerRole(role: UserRole) {
@@ -221,6 +258,7 @@ export class JobsService {
         experienceYears: number | null;
         companyName: string | null;
         companyDescription: string | null;
+        avatarUrl: string | null;
         approved: boolean;
         blocked: boolean;
         emailVerified: boolean;
@@ -228,6 +266,7 @@ export class JobsService {
         cvFilePath: string | null;
         cvMimeType: string | null;
         cvText: string | null;
+        plan?: string;
         createdAt: Date;
         updatedAt: Date;
       };
@@ -244,14 +283,26 @@ export class JobsService {
         })
       : undefined;
 
+    const visibleMatch =
+      candidate && match
+        ? await this.entitlements.redactMatchForPlan(candidate.id, match)
+        : match;
+
     return {
       ...job,
       status: job.status.toLowerCase(),
       employer: {
-        ...job.employer,
+        id: job.employer.id,
+        fullName: job.employer.fullName,
+        companyName: job.employer.companyName,
+        companyDescription: job.employer.companyDescription,
+        location: job.employer.location,
+        avatarUrl: job.employer.avatarUrl,
         role: fromDbUserRole(job.employer.role),
+        plan: String(job.employer.plan || 'FREE').toLowerCase(),
       },
-      match,
+      match: visibleMatch,
+      priorityListing: String(job.employer.plan || '').toUpperCase() === 'PREMIUM',
     };
   }
 }

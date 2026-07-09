@@ -8,6 +8,7 @@ const seekerNav = [
   { to: "/seeker/applications", label: "Applications", icon: ICONS.applications },
   { to: "/seeker/training", label: "Training", icon: ICONS.training },
   { to: "/seeker/coach", label: "AI Coach", icon: ICONS.coach },
+  { to: "/seeker/billing", label: "Premium", icon: ICONS.analytics },
   { to: "/seeker/messages", label: "Messages", icon: ICONS.messages },
 ];
 

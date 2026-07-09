@@ -1,39 +1,55 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View, Linking } from "react-native";
+import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import GlassBackground from "../../components/GlassBackground";
+import ScreenBackground from "../../components/ScreenBackground";
+import BrandLogo from "../../components/BrandLogo";
+import GlassPanel from "../../components/GlassPanel";
+import { ExploreCardSkeleton } from "../../components/Skeleton";
 import { useAuth } from "../../context/AuthContext";
 import { api } from "../../services/api.js";
-import { colors, radius, spacing } from "../../constants/theme";
+import { colors, radius, shadow, spacing } from "../../constants/theme";
 
 export default function ExploreScreen() {
   const insets = useSafeAreaInsets();
-  const { user } = useAuth();
+  const { user, isPremium } = useAuth();
   const [courses, setCourses] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
+  const [premiumRecs, setPremiumRecs] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
-      const allCourses = await api.training.list();
+      setLoading(true);
+      try {
+      const allCourses = await api.training.list().catch(() => []);
       setCourses(allCourses.slice(0, 3));
 
-      if (user?.skills?.length) {
-        const jobs = await api.jobs.list({ status: "published" });
-        const requiredSkills = [...new Set(jobs.flatMap((j) => j.requiredSkills || []))];
-        const gap = await api.ai.skillsGap(user.skills, requiredSkills);
-        if (gap.missingSkills?.length) {
-          const recs = await api.ai.trainingRecommendations(gap.missingSkills);
-          setRecommendations(recs.recommendations || []);
+      if (user?.skills?.length && isPremium) {
+        try {
+          const jobs = await api.jobs.list({ status: "published" });
+          const requiredSkills = [...new Set(jobs.flatMap((j) => j.requiredSkills || []))];
+          const gap = await api.ai.skillsGap(user.skills, requiredSkills);
+          if (gap.missingSkills?.length) {
+            const recs = await api.ai.trainingRecommendations(gap.missingSkills);
+            setRecommendations(recs.recommendations || []);
+          }
+        } catch (err) {
+          if (err.isPremiumRequired) setPremiumRecs(true);
         }
+      } else if (user?.skills?.length && !isPremium) {
+        setPremiumRecs(true);
+      }
+      } finally {
+        setLoading(false);
       }
     }
     load();
-  }, [user?.skills]);
+  }, [user?.skills, isPremium]);
 
   return (
-    <GlassBackground>
+    <ScreenBackground>
       <ScrollView
         contentContainerStyle={{
           paddingTop: insets.top + spacing.lg,
@@ -41,9 +57,38 @@ export default function ExploreScreen() {
           paddingBottom: 120,
         }}
       >
+        <View style={styles.brandRow}>
+          <BrandLogo size="lg" />
+        </View>
         <Text style={styles.title}>Explore</Text>
         <Text style={styles.subtitle}>Training, AI coach, and career growth</Text>
 
+        {loading ? (
+          <>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <ExploreCardSkeleton key={i} />
+            ))}
+          </>
+        ) : (
+          <>
+        <ExploreCard
+          icon="business-outline"
+          title="Companies"
+          text="Browse employers hiring on JobMatch"
+          onPress={() => router.push("/companies")}
+        />
+        <ExploreCard
+          icon="heart-outline"
+          title="Saved Jobs"
+          text="View jobs you bookmarked"
+          onPress={() => router.push("/saved-jobs")}
+        />
+        <ExploreCard
+          icon="briefcase-outline"
+          title="My Applications"
+          text="Track application status"
+          onPress={() => router.push("/(tabs)/applications")}
+        />
         <ExploreCard
           icon="school-outline"
           title="Training Courses"
@@ -54,14 +99,20 @@ export default function ExploreScreen() {
           icon="sparkles-outline"
           title="AI Career Coach"
           text="Get interview and career advice"
-          onPress={() => router.push("/coach")}
+          onPress={() => router.push("/(tabs)/coach")}
         />
-        <ExploreCard
-          icon="map-outline"
-          title="Learning Roadmap"
-          text="Generate a personalized plan on the Training tab"
-          onPress={() => router.push("/training")}
-        />
+
+        {premiumRecs ? (
+          <View style={[styles.recCard, shadow.card, { marginBottom: spacing.md }]}>
+            <Text style={styles.recTitle}>Personalized training</Text>
+            <Text style={styles.recMeta}>
+              Upgrade to Premium for AI course recommendations based on your skill gaps.
+            </Text>
+            <Pressable onPress={() => router.push("/billing")} style={{ marginTop: 10 }}>
+              <Text style={{ color: colors.primary, fontWeight: "700" }}>Upgrade to Premium</Text>
+            </Pressable>
+          </View>
+        ) : null}
 
         {recommendations.length > 0 && (
           <View style={styles.section}>
@@ -69,7 +120,7 @@ export default function ExploreScreen() {
             {recommendations.slice(0, 3).map((rec, i) => (
               <Pressable
                 key={i}
-                style={styles.recCard}
+                style={[styles.recCard, shadow.card]}
                 onPress={() => rec.url && Linking.openURL(rec.url)}
               >
                 <Text style={styles.recTitle}>{rec.title}</Text>
@@ -84,7 +135,7 @@ export default function ExploreScreen() {
           {courses.map((course) => (
             <Pressable
               key={course.id}
-              style={styles.recCard}
+              style={[styles.recCard, shadow.card]}
               onPress={() => course.url && Linking.openURL(course.url)}
             >
               <Text style={styles.recTitle}>{course.title}</Text>
@@ -92,43 +143,46 @@ export default function ExploreScreen() {
             </Pressable>
           ))}
         </View>
+          </>
+        )}
       </ScrollView>
-    </GlassBackground>
+    </ScreenBackground>
   );
 }
 
 function ExploreCard({ icon, title, text, onPress }) {
   return (
-    <Pressable style={styles.card} onPress={onPress}>
-      <View style={styles.cardIcon}>
-        <Ionicons name={icon} size={22} color={colors.primary} />
-      </View>
-      <View style={{ flex: 1 }}>
-        <Text style={styles.cardTitle}>{title}</Text>
-        <Text style={styles.cardText}>{text}</Text>
-      </View>
-      <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+    <Pressable onPress={onPress}>
+      <GlassPanel borderRadius={radius.lg} style={styles.cardShell} contentStyle={styles.card}>
+        <View style={styles.cardIcon}>
+          <Ionicons name={icon} size={22} color={colors.primary} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.cardTitle}>{title}</Text>
+          <Text style={styles.cardText}>{text}</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+      </GlassPanel>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
+  brandRow: { alignItems: "center", marginBottom: spacing.lg },
   title: { fontSize: 28, fontWeight: "800", color: colors.ink },
   subtitle: { color: colors.muted, marginBottom: spacing.lg, marginTop: 4 },
+  cardShell: { marginBottom: spacing.md },
   card: {
-    backgroundColor: "#fff",
-    borderRadius: radius.lg,
     padding: spacing.lg,
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
-    marginBottom: spacing.md,
   },
   cardIcon: {
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: "#EFF6FF",
+    backgroundColor: colors.primaryLight,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -137,10 +191,12 @@ const styles = StyleSheet.create({
   section: { marginTop: spacing.lg },
   sectionTitle: { fontSize: 18, fontWeight: "700", color: colors.ink, marginBottom: spacing.sm },
   recCard: {
-    backgroundColor: "rgba(255,255,255,0.85)",
     borderRadius: radius.md,
     padding: spacing.md,
     marginBottom: spacing.sm,
+    backgroundColor: colors.tagBg,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.5)",
   },
   recTitle: { fontWeight: "700", color: colors.ink },
   recMeta: { color: colors.muted, marginTop: 4, fontSize: 13 },

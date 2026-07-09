@@ -1,11 +1,12 @@
-import { IsArray, IsOptional, IsString, IsUrl } from 'class-validator';
+import { IsArray, IsBoolean, IsOptional, IsString, IsUrl } from 'class-validator';
 
 export class CreateTrainingCourseDto {
   @IsString()
   title!: string;
 
+  @IsOptional()
   @IsString()
-  provider!: string;
+  provider?: string;
 
   @IsOptional()
   @IsString()
@@ -18,4 +19,8 @@ export class CreateTrainingCourseDto {
   @IsArray()
   @IsString({ each: true })
   skills!: string[];
+
+  @IsOptional()
+  @IsBoolean()
+  featured?: boolean;
 }

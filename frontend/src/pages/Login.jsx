@@ -6,6 +6,7 @@ import { useAuth } from "../context/AuthContext.jsx";
 const ROLES = [
   { value: "job_seeker", label: "Job seeker" },
   { value: "employer", label: "Employer" },
+  { value: "training_provider", label: "Training provider" },
 ];
 
 function EyeIcon({ open }) {

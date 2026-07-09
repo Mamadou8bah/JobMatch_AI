@@ -47,8 +47,10 @@ export class JobsController {
     return this.jobsService.deleteJob(id, request.user.sub, request.user.role);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.Employer, UserRole.Admin)
   @Get(':id/matches')
-  async matches(@Param('id') id: string) {
-    return this.jobsService.getJobMatches(id);
+  async matches(@Req() request: Request & { user: { sub: string } }, @Param('id') id: string) {
+    return this.jobsService.getJobMatches(id, request.user.sub);
   }
 }

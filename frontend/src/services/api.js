@@ -9,12 +9,31 @@ export function wakeBackend() {
   return fetch(`${API_BASE}/health`, { method: "GET" }).catch(() => {});
 }
 
-class ApiError extends Error {
+export class ApiError extends Error {
   constructor(message, status, data) {
     super(message);
+    this.name = "ApiError";
     this.status = status;
     this.data = data;
   }
+
+  get isPremiumRequired() {
+    return (
+      this.status === 402 ||
+      this.data?.error === "PremiumRequired" ||
+      /premium|upgrade/i.test(this.message || "")
+    );
+  }
+
+  get upgradePath() {
+    return this.data?.upgradePath || null;
+  }
+}
+
+export function billingPathForRole(role) {
+  if (role === "employer") return "/employer/billing";
+  if (role === "training_provider") return "/provider/billing";
+  return "/seeker/billing";
 }
 
 function getTokens() {
@@ -149,6 +168,12 @@ export const api = {
       form.append("file", file);
       return api.post("/users/me/cv", form);
     },
+    uploadAvatar: (file) => {
+      const form = new FormData();
+      form.append("file", file);
+      return api.post("/users/me/avatar", form);
+    },
+    removeAvatar: () => api.delete("/users/me/avatar"),
     list: () => api.get("/users"),
     get: (id) => api.get(`/users/${id}`),
   },
@@ -180,6 +205,14 @@ export const api = {
     analytics: () => api.get("/employer/analytics"),
   },
 
+  billing: {
+    plans: () => api.get("/billing/plans"),
+    me: () => api.get("/billing/me"),
+    checkout: (data) => api.post("/billing/checkout", data),
+    confirm: (paymentIntentId) =>
+      api.post("/billing/confirm", { paymentIntentId }),
+  },
+
   admin: {
     analytics: () => api.get("/admin/analytics"),
     auditLogs: () => api.get("/admin/audit-logs"),
@@ -201,6 +234,10 @@ export const api = {
       api.get(
         `/training/admin${skill ? `?skill=${encodeURIComponent(skill)}` : ""}`
       ),
+    mine: () => api.get("/training/mine"),
+    createMine: (data) => api.post("/training/mine", data),
+    updateMine: (id, data) => api.patch(`/training/mine/${id}`, data),
+    deleteMine: (id) => api.delete(`/training/mine/${id}`),
     create: (data) => api.post("/training", data),
     update: (id, data) => api.patch(`/training/${id}`, data),
     delete: (id) => api.delete(`/training/${id}`),

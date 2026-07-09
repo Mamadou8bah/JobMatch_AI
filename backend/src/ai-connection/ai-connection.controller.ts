@@ -27,8 +27,11 @@ export class AiConnectionController {
 
   @UseGuards(JwtAuthGuard)
   @Post('training-recommendations')
-  async recommendations(@Body() body: { missingSkills?: string[] }) {
-    return this.aiConnectionService.recommendTraining(body.missingSkills ?? []);
+  async recommendations(
+    @Req() request: Request & { user: { sub: string } },
+    @Body() body: { missingSkills?: string[] },
+  ) {
+    return this.aiConnectionService.recommendTraining(body.missingSkills ?? [], request.user.sub);
   }
 
   @UseGuards(JwtAuthGuard)

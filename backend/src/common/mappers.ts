@@ -7,6 +7,8 @@ export function toDbUserRole(role: UserRole): DbUserRole {
       return DbUserRole.JOB_SEEKER;
     case UserRole.Employer:
       return DbUserRole.EMPLOYER;
+    case UserRole.TrainingProvider:
+      return DbUserRole.TRAINING_PROVIDER;
     case UserRole.Admin:
       return DbUserRole.ADMIN;
   }
@@ -18,6 +20,8 @@ export function fromDbUserRole(role: DbUserRole): UserRole {
       return UserRole.JobSeeker;
     case DbUserRole.EMPLOYER:
       return UserRole.Employer;
+    case DbUserRole.TRAINING_PROVIDER:
+      return UserRole.TrainingProvider;
     case DbUserRole.ADMIN:
       return UserRole.Admin;
   }

@@ -1,8 +1,26 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api } from "../../services/api.js";
+import PremiumGate from "../../components/dashboard/PremiumGate.jsx";
 import StatusBadge from "../../components/dashboard/StatusBadge.jsx";
 import { companyInitials } from "../../components/dashboard/icons.jsx";
+
+function matchLabel(match) {
+  if (match?.score != null) return `${Math.round(match.score)}%`;
+  if (match?.matchBand === "strong") return "Strong";
+  if (match?.matchBand === "good") return "Good";
+  if (match?.matchBand === "fair") return "Fair";
+  if (match?.premiumRequired || match?.matchBand) return "Band";
+  return null;
+}
+
+function matchBarWidth(match) {
+  if (match?.score != null) return match.score;
+  if (match?.matchBand === "strong") return 85;
+  if (match?.matchBand === "good") return 65;
+  if (match?.matchBand === "fair") return 40;
+  return 30;
+}
 
 export default function SeekerRecommendations() {
   const navigate = useNavigate();
@@ -27,7 +45,13 @@ export default function SeekerRecommendations() {
     ])
       .then(([jobList, applications]) => {
         setJobs(
-          [...jobList].sort((a, b) => (b.match?.score || 0) - (a.match?.score || 0))
+          [...jobList].sort((a, b) => {
+            const aScore = a.match?.score ?? (a.match?.matchBand === "strong" ? 85 : a.match?.matchBand === "good" ? 65 : 40);
+            const bScore = b.match?.score ?? (b.match?.matchBand === "strong" ? 85 : b.match?.matchBand === "good" ? 65 : 40);
+            const aBoost = a.priorityListing ? 1000 : 0;
+            const bBoost = b.priorityListing ? 1000 : 0;
+            return bBoost + bScore - (aBoost + aScore);
+          })
         );
         setAppliedJobIds(new Set(applications.map((app) => app.job?.id).filter(Boolean)));
       })
@@ -45,22 +69,25 @@ export default function SeekerRecommendations() {
 
     try {
       let match = job.match;
-      if (match?.score == null) {
+      if (match?.score == null && !match?.matchBand) {
         match = await api.ai.matchScore(job.id);
       }
 
       const missingSkills = match?.missingSkills || [];
       let recommendations = [];
+      let premiumBlocked = Boolean(match?.premiumRequired);
 
       if (missingSkills.length) {
         try {
           const personalized = await api.training.personalized(job.id);
           recommendations = personalized.recommendations || [];
-        } catch {
+        } catch (err) {
+          if (err.isPremiumRequired) premiumBlocked = true;
           try {
             const fallback = await api.ai.trainingRecommendations(missingSkills);
             recommendations = fallback.recommendations || [];
-          } catch {
+          } catch (inner) {
+            if (inner.isPremiumRequired) premiumBlocked = true;
             recommendations = [];
           }
         }
@@ -70,6 +97,8 @@ export default function SeekerRecommendations() {
         ...job,
         match: {
           score: match?.score,
+          matchBand: match?.matchBand,
+          premiumRequired: match?.premiumRequired || premiumBlocked,
           missingSkills,
           matchedSkills: match?.matchedSkills || [],
         },
@@ -200,14 +229,19 @@ export default function SeekerRecommendations() {
                     </div>
                   </div>
                   <div className="dash-job-card-actions">
-                    {job.match?.score != null ? (
+                    {matchLabel(job.match) ? (
                       <div style={{ marginBottom: 8 }}>
-                        <div style={{ fontWeight: 700, fontSize: "1.5rem" }}>
-                          {Math.round(job.match.score)}%
+                        <div style={{ fontWeight: 700, fontSize: job.match?.score != null ? "1.5rem" : "1.05rem" }}>
+                          {matchLabel(job.match)}
                         </div>
                         <div className="dash-match-bar" style={{ width: 80 }}>
-                          <div className="dash-match-fill" style={{ width: `${job.match.score}%` }} />
+                          <div className="dash-match-fill" style={{ width: `${matchBarWidth(job.match)}%` }} />
                         </div>
+                        {job.match?.premiumRequired || (job.match?.matchBand && job.match?.score == null) ? (
+                          <Link to="/seeker/billing" className="dash-inline-link" style={{ fontSize: "0.7rem" }}>
+                            Exact % · Premium
+                          </Link>
+                        ) : null}
                       </div>
                     ) : (
                       <StatusBadge status="pending" />
@@ -248,9 +282,16 @@ export default function SeekerRecommendations() {
 
             <div className="dash-modal-body">
               <p className="dash-modal-description">{detailJob.description}</p>
-              {detailJob.match?.score != null && (
+              {detailJob.match?.score != null ? (
                 <p><strong>Match score:</strong> {Math.round(detailJob.match.score)}%</p>
-              )}
+              ) : matchLabel(detailJob.match) ? (
+                <p>
+                  <strong>Match fit:</strong> {matchLabel(detailJob.match)}{" "}
+                  <Link to="/seeker/billing" className="dash-inline-link">
+                    Unlock exact score
+                  </Link>
+                </p>
+              ) : null}
 
               {detailLoading ? (
                 <div className="dash-loading" style={{ minHeight: 80, marginTop: 16 }}>
@@ -258,6 +299,15 @@ export default function SeekerRecommendations() {
                 </div>
               ) : (
                 <>
+                  {detailJob.match?.premiumRequired && !(detailJob.recommendations?.length > 0) ? (
+                    <div style={{ marginTop: 16 }}>
+                      <PremiumGate
+                        compact
+                        title="Personalized training locked"
+                        message="Upgrade to see course recommendations tailored to the skills you still need for this role."
+                      />
+                    </div>
+                  ) : null}
                   {detailJob.match?.matchedSkills?.length > 0 && (
                     <div style={{ marginTop: 16 }}>
                       <div className="dash-form-label">Skills you have</div>
