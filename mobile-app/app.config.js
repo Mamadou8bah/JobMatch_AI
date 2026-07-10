@@ -1,11 +1,12 @@
 const base = require("./app.json");
+const withApkArchiveName = require("./plugins/withApkArchiveName");
 
 /** @type {import('expo/config').ExpoConfig} */
 module.exports = () => {
   const projectId =
     process.env.EAS_PROJECT_ID || base.expo.extra?.eas?.projectId;
 
-  return {
+  const config = {
     expo: {
       ...base.expo,
       runtimeVersion: {
@@ -29,4 +30,6 @@ module.exports = () => {
           }),
     },
   };
+
+  return withApkArchiveName(config);
 };

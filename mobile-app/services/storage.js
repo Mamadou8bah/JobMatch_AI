@@ -7,7 +7,6 @@ const KEYS = {
   demoRole: "demoRole",
   demoEmail: "demoEmail",
   demoStore: "demoStore_job_seeker",
-  onboardingComplete: "onboardingComplete",
   savedJobIds: "savedJobIds",
 };
 

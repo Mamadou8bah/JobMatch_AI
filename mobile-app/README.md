@@ -6,7 +6,7 @@ React Native / Expo mobile app for **job seekers**, with a clean green Stitch-in
 
 | Area | Screens |
 |------|---------|
-| Auth | Onboarding, Login, Register, Forgot password, Upload resume |
+| Auth | Login, Register, Forgot password, Upload resume |
 | Main tabs | Home, Messages, AI Coach, Profile |
 | Jobs | Job detail, Apply, Saved jobs, Companies |
 | Career | Applications (with filters), Training, Explore hub |
