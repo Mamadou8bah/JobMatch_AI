@@ -527,6 +527,7 @@ export default function Landing() {
               <a href="#pricing" className="text-white/60 transition hover:text-brand-lime">Pricing</a>
               <a href="#steps" className="text-white/60 transition hover:text-brand-lime">Workflow</a>
               <a href="#download" className="text-white/60 transition hover:text-brand-lime">Mobile Access</a>
+              <Link to="/privacy" className="text-white/60 transition hover:text-brand-lime">Privacy Policy</Link>
             </div>
           </div>
           <div>
@@ -543,7 +544,12 @@ export default function Landing() {
         </div>
         <div className="mx-auto mt-10 flex max-w-6xl flex-col gap-3 border-t border-white/10 pt-6 text-xs text-white/45 sm:flex-row sm:items-center sm:justify-between sm:text-sm">
           <span>© 2026 JobMatch AI. All rights reserved.</span>
-          <span>Built for digital employment access in The Gambia.</span>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+            <Link to="/privacy" className="text-white/60 transition hover:text-brand-lime">
+              Privacy Policy
+            </Link>
+            <span>Built for digital employment access in The Gambia.</span>
+          </div>
         </div>
       </footer>
     </main>

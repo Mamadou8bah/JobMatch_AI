@@ -15,10 +15,10 @@ export default function StitchTabBar({ state, navigation }) {
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, 12) }]} pointerEvents="box-none">
+    <View style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, 14) }]} pointerEvents="box-none">
       <View style={[styles.barShell, shadow.soft]}>
         <BlurView
-          intensity={Platform.OS === "android" ? 68 : 58}
+          intensity={Platform.OS === "android" ? 72 : 64}
           tint="light"
           style={[StyleSheet.absoluteFillObject, styles.barBlur]}
         />
@@ -42,12 +42,12 @@ export default function StitchTabBar({ state, navigation }) {
                 >
                   {focused ? (
                     <>
-                      <Ionicons name={tab.iconFocused} size={16} color="#fff" />
+                      <Ionicons name={tab.iconFocused} size={20} color="#fff" />
                       <Text style={styles.activeLabel}>{tab.label}</Text>
                     </>
                   ) : (
                     <View style={styles.inactiveIconWrap}>
-                      <Ionicons name={tab.icon} size={20} color={colors.ink} />
+                      <Ionicons name={tab.icon} size={24} color={colors.ink} />
                     </View>
                   )}
                 </Pressable>
@@ -66,11 +66,11 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     alignItems: "center",
-    paddingHorizontal: 56,
+    paddingHorizontal: 20,
   },
   barShell: {
     width: "100%",
-    maxWidth: 280,
+    maxWidth: 380,
     borderRadius: radius.pill,
     overflow: "hidden",
   },
@@ -93,24 +93,24 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 6,
-    paddingHorizontal: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
     position: "relative",
     zIndex: 2,
   },
   tab: {
     alignItems: "center",
     justifyContent: "center",
-    minHeight: 42,
-    paddingHorizontal: 2,
+    minHeight: 52,
+    paddingHorizontal: 4,
   },
   tabActive: {
     flexDirection: "row",
-    gap: 6,
+    gap: 8,
     backgroundColor: glass.activeTab,
     borderRadius: radius.pill,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingHorizontal: 18,
+    paddingVertical: 13,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.35)",
     shadowColor: colors.primary,
@@ -121,14 +121,14 @@ const styles = StyleSheet.create({
   },
   activeLabel: {
     color: "#fff",
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "700",
   },
   inactiveIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.42)",
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "rgba(255,255,255,0.5)",
     borderWidth: 1,
     borderColor: glass.borderSoft,
     alignItems: "center",

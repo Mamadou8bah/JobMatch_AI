@@ -1,5 +1,5 @@
 export const colors = {
-  background: "#E8F4EC",
+  background: "#F4F8F6",
   surface: "rgba(255, 255, 255, 0.55)",
   primary: "#1B6B45",
   primaryDark: "#14532D",
@@ -30,9 +30,9 @@ export const glass = {
   borderSoft: "rgba(255, 255, 255, 0.35)",
   highlight: "rgba(255, 255, 255, 0.95)",
   shadow: "rgba(27, 107, 69, 0.18)",
-  blobGreen: "rgba(82, 183, 136, 0.42)",
-  blobBlue: "rgba(56, 189, 248, 0.28)",
-  blobMint: "rgba(27, 107, 69, 0.22)",
+  blobGreen: "rgba(82, 183, 136, 0.14)",
+  blobBlue: "rgba(56, 189, 248, 0.1)",
+  blobMint: "rgba(27, 107, 69, 0.1)",
   activeTab: "rgba(27, 107, 69, 0.88)",
 };
 
