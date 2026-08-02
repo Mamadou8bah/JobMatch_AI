@@ -264,4 +264,4 @@ export const api = {
   },
 };
 
-export { ApiError, clearTokens, getTokens, setTokens };
+export { clearTokens, getTokens, setTokens };
