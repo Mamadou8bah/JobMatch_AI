@@ -13,7 +13,7 @@ export function buildCareerCoachFallback(
   const normalized = message.toLowerCase();
   const skills = profile?.skills?.filter(Boolean) ?? [];
   const skillsText = skills.length ? skills.slice(0, 5).join(', ') : 'your current skills';
-  const location = profile?.location || 'The Gambia';
+  const location = profile?.location || 'Africa';
   const name = profile?.fullName?.split(' ')[0];
 
   let response: string;

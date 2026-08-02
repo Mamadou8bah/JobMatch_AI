@@ -11,7 +11,7 @@ license: mit
 
 # JobMatch AI Engine
 
-Python AI module for **JobMatch AI** — resume parsing, embedding-based job matching, skills-gap analysis, training recommendations, and a career guidance chatbot for Gambian job seekers.
+Python AI module for **JobMatch AI** — resume parsing, embedding-based job matching, skills-gap analysis, training recommendations, and a career guidance chatbot for African job seekers.
 
 ## Modules
 

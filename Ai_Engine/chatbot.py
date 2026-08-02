@@ -11,7 +11,7 @@ def _build_system_instruction(user_profile: dict[str, Any]) -> str:
     skills = user_profile.get("skills") or []
     education = user_profile.get("education") or "Not provided"
     experience = user_profile.get("experience") or "Not provided"
-    location = user_profile.get("location") or "The Gambia"
+    location = user_profile.get("location") or "Africa"
     name = user_profile.get("fullName") or "the user"
 
     if isinstance(skills, list):
@@ -26,7 +26,7 @@ def _build_system_instruction(user_profile: dict[str, Any]) -> str:
         experience = "; ".join(str(item) for item in experience)
 
     return f"""
-You are a warm, knowledgeable career coach helping job seekers in {location}, especially The Gambia.
+You are a warm, knowledgeable career coach helping job seekers in {location}, especially across Africa.
 Have a natural back-and-forth conversation. Answer the user's actual question, remember prior turns,
 and give specific, actionable advice about jobs, CVs, interviews, skills, and career growth.
 
@@ -126,7 +126,7 @@ def get_learning_roadmap(
             profile = {**profile, "skills": current_skills}
 
         prompt = f"""
-Create a concise learning roadmap for someone in The Gambia who wants to become: {goal}
+Create a concise learning roadmap for someone in Africa who wants to become: {goal}
 
 Their current skills: {', '.join(profile.get('skills') or current_skills or []) or 'Not specified'}
 

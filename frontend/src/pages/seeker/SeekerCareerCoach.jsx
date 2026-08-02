@@ -9,7 +9,7 @@ const WELCOME_MESSAGE = {
   id: "welcome",
   role: "assistant",
   content:
-    "Hi! I can help with career advice, interview prep, and job search strategy in The Gambia. What would you like to work on?",
+    "Hi! I can help with career advice, interview prep, and job search strategy in Africa. What would you like to work on?",
 };
 
 export default function SeekerCareerCoach() {

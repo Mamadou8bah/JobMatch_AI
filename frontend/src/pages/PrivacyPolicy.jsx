@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import BrandLogo from "../components/BrandLogo.jsx";
 
 const LAST_UPDATED = "July 10, 2026";
-const CONTACT_EMAIL = "support@jobmatchgambia.com";
+const CONTACT_EMAIL = "support@jobmatchafrica.com";
 const SITE_URL = "https://jobmatchgambia.vercel.app";
 
 function Section({ title, children }) {
@@ -19,7 +19,7 @@ export default function PrivacyPolicy() {
   useEffect(() => {
     document.title = "Privacy Policy — JobMatch AI";
     return () => {
-      document.title = "JobMatch AI — Smart Job Matching for The Gambia";
+      document.title = "JobMatch AI — Smart Job Matching for Africa";
     };
   }, []);
 
@@ -202,7 +202,7 @@ export default function PrivacyPolicy() {
 
             <Section title="10. International transfers">
               <p>
-                Your information may be processed on servers located outside The Gambia, including by our
+                Your information may be processed on servers located outside Africa, including by our
                 hosting and service providers. By using the Service, you consent to this processing subject
                 to appropriate safeguards.
               </p>

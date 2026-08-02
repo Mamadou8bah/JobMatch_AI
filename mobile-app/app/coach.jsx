@@ -24,14 +24,14 @@ const WELCOME_MESSAGE = {
   id: "welcome",
   role: "assistant",
   content:
-    "Hi! I'm your AI Career Coach. Ask me about CVs, interviews, skills, and job search strategy in The Gambia.",
+    "Hi! I'm your AI Career Coach. Ask me about CVs, interviews, skills, and job search strategy in Africa.",
   createdAt: new Date().toISOString(),
 };
 
 const SUGGESTED_PROMPTS = [
   { icon: "document-text-outline", text: "How can I improve my CV?" },
   { icon: "mic-outline", text: "Interview tips for my field" },
-  { icon: "trending-up-outline", text: "Skills in demand in The Gambia" },
+  { icon: "trending-up-outline", text: "Skills in demand in Africa" },
   { icon: "mail-outline", text: "Help me write a cover letter" },
 ];
 

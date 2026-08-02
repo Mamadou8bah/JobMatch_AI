@@ -61,7 +61,7 @@ export default function JobCard({ job, onPress, applied, saved, onToggleSave }) 
         <View style={styles.footer}>
           <View style={styles.locationRow}>
             <Ionicons name="location-outline" size={14} color={colors.muted} />
-            <Text style={styles.location}>{job.location || "The Gambia"}</Text>
+            <Text style={styles.location}>{job.location || "Africa"}</Text>
           </View>
           <View style={[styles.ctaBtn, applied && styles.ctaBtnDone]}>
             <Text style={styles.ctaText}>{applied ? "View details" : "View job"}</Text>

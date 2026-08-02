@@ -228,7 +228,7 @@ export default function SeekerProfile() {
                     name="location"
                     value={form.location}
                     onChange={handleChange}
-                    placeholder="Banjul, The Gambia"
+                    placeholder="Lagos, Africa"
                   />
                 </div>
               </div>

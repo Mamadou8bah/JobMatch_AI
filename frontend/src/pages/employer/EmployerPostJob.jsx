@@ -116,7 +116,7 @@ export default function EmployerPostJob() {
                 name="location"
                 value={form.location}
                 onChange={handleChange}
-                placeholder="e.g. Banjul, The Gambia"
+                placeholder="e.g. Lagos, Africa"
               />
             </div>
             <div className="dash-form-group">

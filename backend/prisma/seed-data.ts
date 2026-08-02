@@ -39,7 +39,7 @@ export const SEED_IDS = {
     employerRetail: 'a0000000-0000-4000-8000-000000000026',
     employerSkills: 'a0000000-0000-4000-8000-000000000027',
     employerAgro: 'a0000000-0000-4000-8000-000000000028',
-    providerGambia: 'a0000000-0000-4000-8000-000000000031',
+    providerAfrica: 'a0000000-0000-4000-8000-000000000031',
   },
   jobs: {
     frontend: 'b0000000-0000-4000-8000-000000000001',
@@ -79,7 +79,7 @@ export const SEED_IDS = {
   },
 };
 
-const GAMBIAN_LOCATIONS = ['Banjul', 'Serrekunda', 'Brikama', 'Bakau', 'Farafenni', 'Soma', 'Basse'];
+const AFRICAN_LOCATIONS = ['Banjul', 'Serrekunda', 'Brikama', 'Bakau', 'Farafenni', 'Soma', 'Basse'];
 
 function daysAgo(n: number) {
   const d = new Date();
@@ -363,7 +363,7 @@ export async function runDatabaseSeed(prisma: PrismaClient) {
       email: 'employer@gmail.com',
       fullName: 'Awa Jallow',
       companyName: 'Atlantic Tech',
-      companyDescription: 'Technology company building digital products in The Gambia.',
+      companyDescription: 'Technology company building digital products in Africa.',
       location: 'Banjul',
     },
     {
@@ -379,9 +379,9 @@ export async function runDatabaseSeed(prisma: PrismaClient) {
     {
       key: 'employerTourism',
       id: u.employerTourism,
-      email: 'tourism@gambia.gm',
+      email: 'tourism@africa.example',
       fullName: 'Sainey Camara',
-      companyName: 'Gambia Tourism Board',
+      companyName: 'Africa Tourism Board',
       companyDescription: 'Promoting sustainable tourism and hospitality jobs.',
       location: 'Banjul',
     },
@@ -417,7 +417,7 @@ export async function runDatabaseSeed(prisma: PrismaClient) {
       id: u.employerSkills,
       email: 'info@skillshub.gm',
       fullName: 'Fatou Bojang',
-      companyName: 'Skills Hub Gambia',
+      companyName: 'Skills Hub Africa',
       companyDescription: 'TVET and employability training partnerships.',
       location: 'Brikama',
     },
@@ -465,12 +465,12 @@ export async function runDatabaseSeed(prisma: PrismaClient) {
     planExpiresAt: daysFromNow(365),
   });
 
-  userIds.providerGambia = await upsertUser(prisma, u.providerGambia, {
+  userIds.providerAfrica = await upsertUser(prisma, u.providerAfrica, {
     email: 'provider@gmail.com',
     passwordHash: demoHash,
     role: UserRole.TRAINING_PROVIDER,
     fullName: 'Ousman Training',
-    companyName: 'Gambia Skills Network',
+    companyName: 'Africa Skills Network',
     companyDescription: 'Local TVET and digital skills provider listed on JobMatch AI.',
     location: 'Serrekunda',
     phone: '+220 500 0000',
@@ -486,7 +486,7 @@ export async function runDatabaseSeed(prisma: PrismaClient) {
       id: j.frontend,
       employerId: userIds.employerAtlantic,
       title: 'Frontend Developer',
-      description: 'Build responsive web interfaces for JobMatch AI and partner platforms across The Gambia.',
+      description: 'Build responsive web interfaces for JobMatch AI and partner platforms across Africa.',
       location: 'Banjul',
       employmentType: 'full-time',
       experienceLevel: 'mid',
@@ -752,7 +752,7 @@ export async function runDatabaseSeed(prisma: PrismaClient) {
       id: j.contentWriter,
       employerId: userIds.employerTourism,
       title: 'Content Writer',
-      description: 'Create blog posts and guides promoting Gambian tourism.',
+      description: 'Create blog posts and guides promoting African tourism.',
       location: 'Banjul',
       employmentType: 'contract',
       experienceLevel: 'junior',
@@ -870,22 +870,22 @@ export async function runDatabaseSeed(prisma: PrismaClient) {
   }
 
   const courses = [
-    { id: 'd0000000-0000-4000-8000-000000000001', title: 'Intro to CV Writing', provider: 'JobMatch Academy', description: 'Write a strong CV tailored to Gambian employers.', skills: ['communication'], url: 'https://example.com/cv-writing' },
+    { id: 'd0000000-0000-4000-8000-000000000001', title: 'Intro to CV Writing', provider: 'JobMatch Academy', description: 'Write a strong CV tailored to African employers.', skills: ['communication'], url: 'https://example.com/cv-writing' },
     { id: 'd0000000-0000-4000-8000-000000000002', title: 'SQL Basics', provider: 'JobMatch Academy', description: 'Database queries and relational data fundamentals.', skills: ['database', 'sql'], url: 'https://example.com/sql' },
     { id: 'd0000000-0000-4000-8000-000000000003', title: 'React for Beginners', provider: 'freeCodeCamp', description: 'Build modern interfaces with React.', skills: ['react', 'javascript'], url: 'https://www.freecodecamp.org' },
     { id: 'd0000000-0000-4000-8000-000000000004', title: 'TypeScript Fundamentals', provider: 'Microsoft Learn', description: 'Typed JavaScript for scalable apps.', skills: ['typescript', 'javascript'], url: 'https://learn.microsoft.com' },
     { id: 'd0000000-0000-4000-8000-000000000005', title: 'Python for Data Analysis', provider: 'Coursera', description: 'Analyze data with pandas and NumPy.', skills: ['python', 'data analysis'], url: 'https://coursera.org' },
-    { id: 'd0000000-0000-4000-8000-000000000006', title: 'Customer Service Excellence', provider: 'Skills Hub Gambia', description: 'Professional communication for support roles.', skills: ['customer service', 'communication'], url: 'https://example.com/cs' },
+    { id: 'd0000000-0000-4000-8000-000000000006', title: 'Customer Service Excellence', provider: 'Skills Hub Africa', description: 'Professional communication for support roles.', skills: ['customer service', 'communication'], url: 'https://example.com/cs' },
     { id: 'd0000000-0000-4000-8000-000000000007', title: 'Digital Marketing Basics', provider: 'Google Digital Garage', description: 'SEO, social media, and online campaigns.', skills: ['marketing', 'social media', 'seo'], url: 'https://learndigital.withgoogle.com' },
     { id: 'd0000000-0000-4000-8000-000000000008', title: 'Project Management Essentials', provider: 'PMI', description: 'Agile and waterfall project delivery.', skills: ['project management', 'agile'], url: 'https://pmi.org' },
-    { id: 'd0000000-0000-4000-8000-000000000009', title: 'Electrical Safety', provider: 'TVET Gambia', description: 'Safe wiring practices for technicians.', skills: ['electrical wiring', 'safety'], url: 'https://example.com/electrical' },
-    { id: 'd0000000-0000-4000-8000-00000000000a', title: 'Hospitality & Tourism', provider: 'Gambia Tourism Board', description: 'Guest relations and tour operations.', skills: ['hospitality', 'communication'], url: 'https://example.com/tourism' },
+    { id: 'd0000000-0000-4000-8000-000000000009', title: 'Electrical Safety', provider: 'TVET Africa', description: 'Safe wiring practices for technicians.', skills: ['electrical wiring', 'safety'], url: 'https://example.com/electrical' },
+    { id: 'd0000000-0000-4000-8000-00000000000a', title: 'Hospitality & Tourism', provider: 'Africa Tourism Board', description: 'Guest relations and tour operations.', skills: ['hospitality', 'communication'], url: 'https://example.com/tourism' },
     { id: 'd0000000-0000-4000-8000-00000000000b', title: 'QuickBooks for SMEs', provider: 'Banjul Finance Group', description: 'Bookkeeping for small businesses.', skills: ['quickbooks', 'accounting'], url: 'https://example.com/quickbooks' },
     { id: 'd0000000-0000-4000-8000-00000000000c', title: 'Node.js Backend Development', provider: 'JobMatch Academy', description: 'REST APIs with Express and PostgreSQL.', skills: ['nodejs', 'postgresql'], url: 'https://example.com/nodejs' },
     { id: 'd0000000-0000-4000-8000-00000000000d', title: 'Figma UI Design', provider: 'Udemy', description: 'Prototyping and design systems.', skills: ['figma', 'ux'], url: 'https://udemy.com' },
     { id: 'd0000000-0000-4000-8000-00000000000e', title: 'Excel for Business', provider: 'JobMatch Academy', description: 'Spreadsheets for finance and operations.', skills: ['excel', 'microsoft office'], url: 'https://example.com/excel' },
     { id: 'd0000000-0000-4000-8000-00000000000f', title: 'Git & GitHub', provider: 'GitHub Skills', description: 'Version control for development teams.', skills: ['git'], url: 'https://skills.github.com' },
-    { id: 'd0000000-0000-4000-8000-000000000010', title: 'First Aid Certification', provider: 'Red Cross Gambia', description: 'Emergency response for healthcare workers.', skills: ['first aid', 'patient care'], url: 'https://example.com/firstaid' },
+    { id: 'd0000000-0000-4000-8000-000000000010', title: 'First Aid Certification', provider: 'Red Cross Africa', description: 'Emergency response for healthcare workers.', skills: ['first aid', 'patient care'], url: 'https://example.com/firstaid' },
     { id: 'd0000000-0000-4000-8000-000000000011', title: 'Sales & CRM', provider: 'HubSpot Academy', description: 'Pipeline management and client outreach.', skills: ['sales', 'crm'], url: 'https://academy.hubspot.com' },
     { id: 'd0000000-0000-4000-8000-000000000012', title: 'Content Writing', provider: 'JobMatch Academy', description: 'Clear writing for web and social media.', skills: ['content writing', 'communication'], url: 'https://example.com/writing' },
     { id: 'd0000000-0000-4000-8000-000000000013', title: 'Logistics Operations', provider: 'River Logistics', description: 'Warehouse and delivery coordination.', skills: ['logistics', 'teamwork'], url: 'https://example.com/logistics' },
@@ -908,13 +908,13 @@ export async function runDatabaseSeed(prisma: PrismaClient) {
         skills: course.skills,
         url: course.url,
         status: TrainingCourseStatus.ACTIVE,
-        ownerId: owned ? userIds.providerGambia : null,
+        ownerId: owned ? userIds.providerAfrica : null,
         featured: false,
       },
       create: {
         ...course,
         status: TrainingCourseStatus.ACTIVE,
-        ownerId: owned ? userIds.providerGambia : null,
+        ownerId: owned ? userIds.providerAfrica : null,
         featured: false,
       },
     });
@@ -1026,7 +1026,7 @@ export async function runDatabaseSeed(prisma: PrismaClient) {
     { id: 'h0000000-0000-4000-8000-000000000005', userId: userIds.fatou, role: CoachMessageRole.USER, content: 'I have 3 years of React experience. How can I stand out for senior roles?', createdAt: daysAgo(5) },
     { id: 'h0000000-0000-4000-8000-000000000006', userId: userIds.fatou, role: CoachMessageRole.ASSISTANT, content: 'Highlight measurable impact on past projects, contribute to open source, and consider React Native — Kotu Digital has a mobile developer opening that matches your profile well.', createdAt: daysAgo(5) },
     { id: 'h0000000-0000-4000-8000-000000000007', userId: userIds.laminSeeker, role: CoachMessageRole.USER, content: 'I am interested in data analyst jobs but only have 1 year of experience.', createdAt: daysAgo(4) },
-    { id: 'h0000000-0000-4000-8000-000000000008', userId: userIds.laminSeeker, role: CoachMessageRole.ASSISTANT, content: 'Your Python and SQL skills are a solid foundation. Complete Python for Data Analysis, build a small portfolio project with Gambian labour-market data, and apply to the Data Analyst role at Atlantic Tech — you are already shortlisted.', createdAt: daysAgo(4) },
+    { id: 'h0000000-0000-4000-8000-000000000008', userId: userIds.laminSeeker, role: CoachMessageRole.ASSISTANT, content: 'Your Python and SQL skills are a solid foundation. Complete Python for Data Analysis, build a small portfolio project with African labour-market data, and apply to the Data Analyst role at Atlantic Tech — you are already shortlisted.', createdAt: daysAgo(4) },
     { id: 'h0000000-0000-4000-8000-000000000009', userId: userIds.mariama, role: CoachMessageRole.USER, content: 'What salary range should I expect for accountant roles in Banjul?', createdAt: daysAgo(3) },
     { id: 'h0000000-0000-4000-8000-00000000000a', userId: userIds.mariama, role: CoachMessageRole.ASSISTANT, content: 'Junior accountant roles at Banjul Finance Group list GMD 22,000–32,000. With 4 years of experience and QuickBooks skills, you are well positioned — prepare for behavioural and technical questions.', createdAt: daysAgo(3) },
   ];
@@ -1107,6 +1107,6 @@ export async function runDatabaseSeed(prisma: PrismaClient) {
     chatMessages: counts[6],
     coachMessages: counts[7],
     auditLogs: counts[8],
-    locations: GAMBIAN_LOCATIONS.length,
+    locations: AFRICAN_LOCATIONS.length,
   };
 }

@@ -32,7 +32,7 @@ def test_training_static_lookup() -> None:
 def test_matching_engine() -> None:
     result = compute_match_score(
         candidate_skills=["Python", "Django", "REST APIs", "PostgreSQL"],
-        candidate_experience="2 years as backend developer at TechGambia",
+        candidate_experience="2 years as backend developer at TechAfrica",
         candidate_education="BSc Computer Science",
         job_title="Backend Developer",
         job_description="We are looking for a backend developer with Django and PostgreSQL experience.",

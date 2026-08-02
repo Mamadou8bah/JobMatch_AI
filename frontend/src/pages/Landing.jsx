@@ -155,7 +155,7 @@ export default function Landing() {
         <div className="mx-auto grid w-full max-w-7xl items-center gap-8 pt-8 sm:gap-10 sm:pt-10 lg:grid-cols-[minmax(0,1fr)_minmax(260px,320px)] lg:gap-12 xl:pt-14">
           <div className="text-center lg:text-left">
             <p className="mx-auto text-blue-300 inline-flex min-h-10 items-center rounded-full bg-white/10 px-4 text-xs font-semibold text-white/75 sm:text-sm lg:mx-0">
-              AI-Powered Employment Platform for The Gambia
+              AI-Powered Employment Platform for Africa
             </p>
             <h1 className="mx-auto mt-6 max-w-xl text-4xl font-extrabold leading-[1.05] sm:text-5xl md:text-6xl lg:mx-0 lg:max-w-2xl xl:text-7xl">
               Match talent, jobs, and{" "}
@@ -174,8 +174,10 @@ export default function Landing() {
               </a>
             </div>
             <div className="mx-auto mt-10 grid w-full max-w-xs grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-left sm:max-w-sm lg:mx-0">
-              <strong className="text-lg text-white">50k+</strong>
-              <span className="text-sm text-white/55">Scalable User Target</span>
+              <strong className="text-lg text-white">10M+</strong>
+              <span className="text-sm text-white/55">
+                New Job seekers entering Africa&apos;s job market every year
+              </span>
               <div className="col-span-2 mt-3 flex items-center">
                 {["JS", "EM", "TP", "AD"].map((item) => (
                   <span
@@ -245,7 +247,7 @@ export default function Landing() {
                   <div className="min-w-0">
                     <strong className="block truncate text-sm">{job.role}</strong>
                     <small className="block truncate text-[11px] text-zinc-500">
-                      {job.company} • The Gambia
+                      {job.company} • Africa
                     </small>
                     <div className="mt-2 flex flex-wrap gap-1">
                       {["CV Parsed", "Skills Fit", "Training"].map((tag) => (
@@ -295,7 +297,7 @@ export default function Landing() {
       <section className="overflow-hidden px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
         <SectionHeading
           eyebrow="Who we serve"
-          title="Built for The Gambia's employment ecosystem"
+          title="Built for Africa's employment ecosystem"
           description="One platform for every stakeholder shaping jobs, skills, and opportunity across the country."
           className="text-center"
         />
@@ -515,7 +517,7 @@ export default function Landing() {
           <div className="sm:col-span-2">
             <BrandLogo to="/" size="lg" />
             <p className="mt-4 max-w-md text-sm leading-7 text-white/55">
-              A centralized employment and skills-matching platform helping The Gambia connect
+              A centralized employment and skills-matching platform helping Africa connect
               job seekers, employers, and training providers.
             </p>
           </div>
@@ -548,7 +550,7 @@ export default function Landing() {
             <Link to="/privacy" className="text-white/60 transition hover:text-brand-lime">
               Privacy Policy
             </Link>
-            <span>Built for digital employment access in The Gambia.</span>
+            <span>Built for digital employment access in Africa.</span>
           </div>
         </div>
       </footer>

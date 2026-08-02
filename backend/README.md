@@ -58,7 +58,7 @@ Swagger: `http://localhost:3000/api/docs`
 | Job seeker | fatou@gmail.com |
 | Pending employer | pending@company.gm (awaiting approval) |
 
-More seeded employers: `tourism@gambia.gm`, `hr@banjulfinance.gm`, `careers@kotudigital.gm`, etc.  
+More seeded employers: `tourism@africa.example`, `hr@banjulfinance.gm`, `careers@kotudigital.gm`, etc.  
 More seekers: `mariama@gmail.com`, `omar@gmail.com`, `aisha@gmail.com`, and others in `prisma/seed-data.ts`.
 
 ### Profile pictures (Cloudinary)
